@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Arrangement.ArrTypes where
 
 import Common.CommonTypes
@@ -8,7 +9,7 @@ import Data.Typeable
 import Control.Exception
 
 data IDA = NoIDA | IDA !Int deriving (Show, Read, Eq, Ord)
-               
+
                                                               -- ugly hack for popups, need pres to get items
 data ArrangementLevel doc enr node clip token = ArrangementLevel (Arrangement node) FocusArr (Layout doc enr node clip token) deriving Show
 
@@ -40,7 +41,7 @@ data EditArrangement_ wrapped doc enr node clip token =
   | KeyCharArr Char
   | KeySpecialArr SpecialKey Modifiers
   | MouseDownArr Int Int Modifiers Int
-  | MouseDragArr Int Int Modifiers 
+  | MouseDragArr Int Int Modifiers
   | MouseUpArr Int Int Modifiers
   | DragStartArr Int Int
   | DropArr Int Int

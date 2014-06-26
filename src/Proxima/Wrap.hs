@@ -1,3 +1,9 @@
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE TypeSynonymInstances   #-}
+{-# LANGUAGE NoMonomorphismRestriction #-} -- ??!!?
+
 -----------------------------------------------------------------------------------------
 {-| Module      : Proxima.Wrap
     Copyright   : (c) 2007 Martijn Schrage
@@ -5,7 +11,7 @@
 
     Maintainer  : martijn@cs.uu.nl
     Stability   : experimental
-    Portability : 
+    Portability :
 -}
 -----------------------------------------------------------------------------------------
 
@@ -34,7 +40,7 @@ each layer component takes edit op -> edit ops.
 
 -}
 
-data Wrapped doc enr node clip token = 
+data Wrapped doc enr node clip token =
     WrappedDocEdit   (EditDocument     doc enr node clip token)
   | WrappedEnrEdit   (EditEnrichedDoc  doc enr node clip token)
   | WrappedPresEdit  (EditPresentation doc enr node clip token)
@@ -64,7 +70,7 @@ instance (Show doc, Show enr, Show node, Show token) => Show (Wrapped doc enr no
   show (WrappedArrEdit' e)  = "<Wrapped:"++show e++">"
   show (WrappedRenEdit' e)  = "<Wrapped:"++show e++">"
   show w = "<Wrapped>"
-    
+
 class Wrapable editOp doc enr node clip token | editOp -> doc enr node clip token where
   wrap :: editOp -> Wrapped doc enr node clip token
   unwrap :: Wrapped doc enr node clip token -> editOp
@@ -185,7 +191,7 @@ type EditRendering' doc enr node clip token =
 
 type RenderingLevel doc enr node clip token =
        RenderingLevel_ (Wrapped doc enr node clip token) doc enr node clip token
-       
+
 castRemainingEditOps :: ( Wrapable editOp doc enr node clip token
                         , Wrapable editOp' doc enr node clip token ) =>
                         (editOp -> IO ([editOp'],state,level)) -> [editOp] -> IO ([editOp'], state, level)
@@ -204,15 +210,16 @@ castRemainingEditOpsRedirect (editOp:editOps) redirect = redirect editOp : map c
 -- specialized versions of cast. These may be more useful, as the normal version
 -- often requires a type signature on the cast edit op, (sometimes also requiring scoped type vars)
 
-castDoc = unwrap . WrappedDocEdit   
-castEnr = unwrap . WrappedEnrEdit  
-castPres = unwrap . WrappedPresEdit 
-castLay = unwrap . WrappedLayEdit  
-castArr = unwrap . WrappedArrEdit  
-castRen = unwrap . WrappedRenEdit  
-castDoc' = unwrap . WrappedDocEdit' 
-castEnr' = unwrap . WrappedEnrEdit' 
+castDoc = unwrap . WrappedDocEdit
+castEnr = unwrap . WrappedEnrEdit
+castPres = unwrap . WrappedPresEdit
+castLay = unwrap . WrappedLayEdit
+castArr = unwrap . WrappedArrEdit
+castRen = unwrap . WrappedRenEdit
+castDoc' = unwrap . WrappedDocEdit'
+castEnr' = unwrap . WrappedEnrEdit'
 castPres' = unwrap . WrappedPresEdit'
-castLay' = unwrap . WrappedLayEdit' 
-castArr' = unwrap . WrappedArrEdit' 
-castRen' = unwrap . WrappedRenEdit' 
+castLay' = unwrap . WrappedLayEdit'
+castArr' = unwrap . WrappedArrEdit'
+castRen' = unwrap . WrappedRenEdit'
+

@@ -47,20 +47,20 @@ replace callerName i xs x = case splitAt i xs of
                    _                -> debug Err ("**** CommonUtils.replace (called by "++callerName++"): index out of bounds") xs
 
 scaleInt :: Double -> Int -> Int
-scaleInt scale x = round (fromIntegral x * scale)  
+scaleInt scale x = round (fromIntegral x * scale)
 
 descaleInt :: Double -> Int -> Int
 descaleInt scale x = round (fromIntegral x / scale)
 
 -- Compute angle of the line (fromx,fromy) (tox,toy), result lies in [0..2*pi>
 computeAngle :: Int -> Int -> Int -> Int -> Double
-computeAngle fromx fromy tox toy = 
-  atan (fromIntegral (-(toy-fromy))/fromIntegral (tox-fromx)) + 
-  if tox < fromx then pi else if fromy < toy then 2* pi else 0 
+computeAngle fromx fromy tox toy =
+  atan (fromIntegral (-(toy-fromy))/fromIntegral (tox-fromx)) +
+  if tox < fromx then pi else if fromy < toy then 2* pi else 0
 {-
 In quadrants  II  I  , atan a is between 0 and pi/2 or -pi/2:  - +
               III IV                                           + -
-              
+
 Therefore, we add   pi 0   , based on the quadrant the line is pointing in.
                     pi 2pi
 
@@ -81,7 +81,7 @@ overlap ((x, y), (w, h)) ((x', y'),(w',h')) =
 contains :: Rectangle -> Rectangle -> Bool
 contains ((x, y), (w, h)) ((x', y'),(w',h')) =
   (x' >= x && x'+w' <= x+w &&  y' >= y && y'+h' <= y+h)
-  
+
 -- | Compute the difference (rectangle - rectangle). The result is a list of a maximum of
 --   4 rectangles.
 -- First, four segments of the second rectangle's complement are computed, for each of which we
@@ -103,21 +103,21 @@ difference ((x,y),(w,h)) ((x',y'),(w',h')) =
          ( (clip boundlx boundrx lx, clip bounduy boundly uy)  -- note that upper y < lower y
          , (clip boundlx boundrx rx, clip bounduy boundly ly)
          )
-           
+
        isNonEmptyRectangle ((x,y),(w,h)) = w>0 && h>0
 
 -- Some basic timer functions for benchmarking
 
-startTimer = 
+startTimer =
  do { time <- getCurrentTime
     ; newIORef time
     }
-    
-resetTimer timer = 
+
+resetTimer timer =
  do { time <- getCurrentTime
     ; writeIORef timer time
     }
-    
+
 getTimerValue timer =
  do { startTime <- readIORef timer
     ; time <- getCurrentTime
@@ -138,9 +138,9 @@ lines' s    = let (l,s') = break (\c->c=='\n' || c=='\r') s
 -- Version of head that reports the caller in case of empty list.
 head' caller xs = case xs of
                     []  -> error $ caller ++ ": called head' []"
-                    x:_ -> x 
-                
-                    
+                    x:_ -> x
+
+
 -- mark what parts of the arrangement were reused from the previous one
 
 -- This setting is not part of Settings.settings, since it would add to the

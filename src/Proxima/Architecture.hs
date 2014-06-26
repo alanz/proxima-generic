@@ -15,10 +15,10 @@ import qualified Rendering.RenInterpret     as RenInterpret
 
 type Step m nextstep a b c d = (a -> m (b, nextstep m c d a b))
 
-newtype IntrpStep m a b c d = 
+newtype IntrpStep m a b c d =
             IntrpStep {intrpStep :: Step m PresStep a b c d}
 
-newtype PresStep m a b c d = 
+newtype PresStep m a b c d =
             PresStep {presStep :: Step m IntrpStep a b c d}
 
 
@@ -33,7 +33,7 @@ instance Pack m (PresStep m a b c d) a b (IntrpStep m c d a b) where
 
 
 
-type LayerFunction m horArgs vertArg horRess vertRes = 
+type LayerFunction m horArgs vertArg horRess vertRes =
        (horArgs -> vertArg -> m (vertRes, horRess))
 
 -- The functions as they are defined in the layer modules
@@ -54,18 +54,18 @@ data Layer m state high low editsH editsL editsH' editsL' =
 
 lift :: Monad m => Layer m state doc pres editsDoc editsPres editsDoc' editsPres' -> (state,doc) -> IntrpStep m (pres,editsPres) (doc,editsDoc) (doc, editsDoc') (pres, editsPres')
 lift layer =
-  fix $ liftStep (interpret layer) 
-      . liftStep (present layer) 
+  fix $ liftStep (interpret layer)
+      . liftStep (present layer)
 
 combine :: Monad m => IntrpStep m b c d e -> IntrpStep m a b e f -> IntrpStep m a c d f
-combine upr lwr =  
+combine upr lwr =
   fix (combineStepUp . combineStepDown) upr lwr
 
 
- 
+
 wrap :: Monad m => ProximaLayer m state doc pres editsDoc editsPres editsDoc' editsPres'
                 -> Layer m state doc pres editsDoc editsPres editsDoc' editsPres'
-wrap (ProximaLayer interpret' present') = 
+wrap (ProximaLayer interpret' present') =
   Layer { interpret = \(state, doc) (pres, editsPres) ->
                          do { (editsDoc, state, pres) <- interpret' state pres doc editsPres
                             ; return ((doc, editsDoc), (state, pres))
@@ -78,12 +78,12 @@ wrap (ProximaLayer interpret' present') =
 
 
 evaluationLayer   = ProximaLayer EvalInterpret.interpretIO EvalPresent.presentIO
-presentationLayer presentationSheet parseSheet = ProximaLayer 
+presentationLayer presentationSheet parseSheet = ProximaLayer
                                                    (PresInterpret.interpretIO parseSheet)
                                                    (PresPresent.presentIO presentationSheet)
-layoutLayer       scannerSheet = ProximaLayer 
+layoutLayer       scannerSheet = ProximaLayer
                                    (LayInterpret.interpretIO scannerSheet) LayPresent.presentIO
-arrangementLayer  settings     = ProximaLayer 
+arrangementLayer  settings     = ProximaLayer
                                    ArrInterpret.interpretIO (ArrPresent.presentIO settings)
 renderingLayer    settings     = ProximaLayer
                                    RenInterpret.interpretIO (RenPresent.presentIO settings)

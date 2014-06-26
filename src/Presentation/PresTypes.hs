@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Presentation.PresTypes where
 
 import Common.CommonTypes

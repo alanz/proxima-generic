@@ -1,10 +1,13 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Rendering.RenTypes where
 
 #ifdef SERVER
 import Control.Monad.Writer
 #else
 import Graphics.UI.Gtk hiding (Scale, Size, Rectangle)
+import Graphics.UI.Gtk.Gdk.GC
 import Graphics.Rendering.Cairo
 #endif
 
@@ -17,13 +20,13 @@ import Evaluation.DocTypes
 
 import Presentation.PresTypes (PopupMenuItem)
 
-data RenderingLevel_ wrapped doc enr node clip token = 
-       RenderingLevel Scale 
+data RenderingLevel_ wrapped doc enr node clip token =
+       RenderingLevel Scale
                       (GUICommand wrapped doc enr node clip token) -- used for popups
                       Rendering -- rendering
                       Rendering -- focus rendering
                       Size Debugging UpdatedRegions LeftButtonDown
-                                                   
+
 data EditRendering'_ wrapped doc enr node clip token =
     SetRen' (RenderingLevel_ wrapped doc enr node clip token)
   | AlertRen' String
@@ -75,7 +78,7 @@ emptyRendering = \dc va -> return ()
 #else
 
 type GUICommand wrapped doc enr node clip token = Int -> Int -> [PopupMenuItem doc enr node clip token]
-                      
+
 type Rendering = (Point,Size) -> Writer String ()
                  -- viewed area ((x,y),(w,h))
 

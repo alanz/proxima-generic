@@ -11,7 +11,7 @@ import Evaluation.DocTypes
 import Evaluation.DocUtils
 import Presentation.PresTypes
 
-import List
+import Data.List
 import Debug.Trace
 
 class Editable a doc enr node clip token | a -> doc enr node clip token where
@@ -35,7 +35,7 @@ class Clip clip where
   isListClip :: clip -> Bool
   insertListClip :: Int -> clip -> clip -> clip
   removeListClip :: Int -> clip -> clip
-  
+
 navigateUpD :: FocusDoc -> document -> FocusDoc
 navigateUpD NoPathD         _  = NoPathD
 navigateUpD (PathD [])      _  = NoPathD
@@ -45,7 +45,7 @@ navigateUpD pd              _ = pd
 navigateDownD :: (Editable doc doc enr node clip token, Clip clip) => FocusDoc -> doc -> FocusDoc
 navigateDownD NoPathD   d = PathD []
 navigateDownD (PathD p) d = PathD $ if arityD p d > 0 then p++[0] else p
- 
+
 navigateLeftD :: Editable doc doc enr node clip token => FocusDoc -> doc -> FocusDoc
 navigateLeftD NoPathD         _ = NoPathD
 navigateLeftD (PathD p@(_:_)) d = PathD $ let i = last p
@@ -87,7 +87,7 @@ menuD NoPathD _              = []
 menuD path@(PathD p) d =
   let alts = alternativesD p d
       mkItem (s,c) = (s, \(DocumentLevel _ pth clip) -> DocumentLevel (pasteD p c d) pth clip)
-  in  [ ("Cut", \(DocumentLevel d _ clip) -> let (d',p') = deleteD p d 
+  in  [ ("Cut", \(DocumentLevel d _ clip) -> let (d',p') = deleteD p d
                                                in  DocumentLevel d' p' (selectD p d) ) 
       , ("Copy", \(DocumentLevel d _ clip) -> DocumentLevel d path (selectD p d) ) 
       , ("Paste", \(DocumentLevel d _ clip) -> DocumentLevel (pasteD p clip d) path clip )
@@ -100,7 +100,7 @@ menuD path@(PathD p) d =
                     mkItem2 (s,c) = (s, \(DocumentLevel _ pth clip) -> DocumentLevel (pasteD (init p) c d) pth clip)
                     pasteBefore = ("Paste before", \(DocumentLevel _ pth clip) -> 
                                                      DocumentLevel (pasteD (init p) (insertListClip (last p) clip parent) d) pth clip )
-                    pasteAfter = ("Paste after", \(DocumentLevel _ pth clip) -> 
+                    pasteAfter = ("Paste after", \(DocumentLevel _ pth clip) ->
                                                      DocumentLevel (pasteD (init p) (insertListClip (last p+1) clip parent) d) pth clip )
                 in  map mkItem2 alts2 ++ [pasteBefore,pasteAfter]
 -}
@@ -112,10 +112,10 @@ pasteD :: Editable doc doc enr node clip token => Path -> clip -> doc -> doc
 pasteD p c doc = paste p c doc
 
 insertListD :: (Show clip,Clip clip, Editable doc doc enr node clip token) => Path -> Int -> clip -> doc -> doc
-insertListD path index clip doc = 
+insertListD path index clip doc =
   let list = selectD path doc
   in  if isListClip list
-      then if index <= arityClip list 
+      then if index <= arityClip list
            then pasteD path (insertListClip index clip list) doc
            else debug Err ("DocumentEdit.insertBeforeD beyond end of list "++show path) $ doc
       else debug Err ("DocumentEdit.insertBeforeD on non-list at "++show path++show clip) $ doc
@@ -125,7 +125,7 @@ deleteD :: (Editable doc doc enr node clip token, Clip clip) => Path -> doc -> (
 deleteD p d = if not (null p) && isListClip (selectD (init p) d) -- if parent is list, then delete is remove from list
               then (pasteD (init p) (removeListClip (last p) (selectD (init p) d)) d, NoPathD)
               else let newhole = holeClip (selectD p d)
-                   in  (pasteD p newhole d, PathD p) 
+                   in  (pasteD p newhole d, PathD p)
 
 arityD :: (Editable doc doc enr node clip token, Clip clip) => Path -> doc -> Int
 arityD p d = arityClip (select p d)
@@ -133,22 +133,22 @@ arityD p d = arityClip (select p d)
 alternativesD :: (Editable doc doc enr node clip token, Clip clip) => Path -> doc -> [ (String, clip) ]
 alternativesD p d = alternativesClip (select p d)
 
- 
+
 moveDocPathD :: (Editable doc doc enr node clip token, Clip clip, Show clip, Show doc) => Path -> Path -> Int -> doc -> doc
 moveDocPathD [] targetListPath index doc = error "Move with empty source path."
 moveDocPathD sourcePath targetListPath index doc =
   let (tgtPath,tgtIx) =
-        if not $ init sourcePath `isPrefixOf` targetListPath 
+        if not $ init sourcePath `isPrefixOf` targetListPath
         then (targetListPath, index)
         else if length sourcePath - 1 == length targetListPath -- src & tgt in same list
              then (targetListPath, if last sourcePath < index then index-1 else index) 
              else -- we now have: length targetListPath > length sourcePath - 1
                   let (pref, p: suffix)  = splitAt (length sourcePath - 1) targetListPath 
                   in  debug Arr (show (pref, p, suffix) ++ show sourcePath) $
-                      if last sourcePath == p then error "Cyclic move."          
+                      if last sourcePath == p then error "Cyclic move."
                       else if last sourcePath < p then (pref ++ [p-1] ++ suffix, index)
                                                   else (pref ++ [p]   ++ suffix, index)
-      
+
       source = selectD sourcePath doc
       (doc',_) = deleteD sourcePath doc
       (doc'') = debug Arr ("move to " ++ show (tgtPath, tgtIx)) $

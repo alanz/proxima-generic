@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-} 
+{-# LANGUAGE CPP #-}
 -- CPP is enabled only for this module, since it slows the build process down quite a bit
 module Rendering.RendererGtk where
 
@@ -29,7 +29,7 @@ import Proxima.GUIGtk
 {-
 TODO:
 - underline and strikeout don't work.
-- images: fix load exception and garbage collect. + use clipping 
+- images: fix load exception and garbage collect. + use clipping
 - line sizes
 - scaling
 - set view size and title
@@ -57,7 +57,7 @@ Issues:
 
 - popups require imports of PresTypes in Renderer and GUI, maybe restructure this?
 
-- popups cannot handle page scrolling 
+- popups cannot handle page scrolling
   (and probably also not scrolling in elements between root and "proxima", but maybe we don't want to allow proxima inside other elements)
 
 - style and background & fill colors should be implemented a bit more accurately
@@ -67,7 +67,7 @@ Issues:
 
 Strange: after installing catch in handler loop, there were no more commitandrelease errors..
 
-1 inch = 96 px  96 = dpi 
+1 inch = 96 px  96 = dpi
 1 pt = 1/72 inch
 
 so 1 pt = dpi/72 px
@@ -93,18 +93,18 @@ mkPopupMenuXY settings prs scale arr handler renderingLvlVar buffer viewedAreaRe
     ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas upd)
                       | (str, upd) <- ctxtItems]
     ; print (map fst menuItems)
-    
+
     ; contextMenu <- mkMenu menuItems
-    ; return $ Just contextMenu                                          
+    ; return $ Just contextMenu
     }
- 
+
 render scale arrDb diffTree arrangement (wi,dw,gc) viewedArea =
  do { setLineCap LineCapRound
     ; setLineJoin LineJoinRound
 --    ; seq (length (show arrangement)) $ return ()
     ; renderArr undefined (wi,dw,gc) arrDb scale origin viewedArea diffTree arrangement
     }
-    
+
 renderFocus scale arrDb focus arrangement (wi, dw, gc) viewedArea =
   let focusArrList = arrangeFocus focus arrangement
   in  do { setLineCap LineCapRound

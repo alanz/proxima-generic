@@ -1,5 +1,5 @@
-module Common.CommonTypes ( module Char 
-                   , module List
+module Common.CommonTypes ( module Data.Char 
+                   , module Data.List
                    , module Common.DebugLevels
                    , module Common.CommonTypes ) where
 
@@ -10,8 +10,8 @@ module Common.CommonTypes ( module Char
 -}
 import Common.DebugLevels 
 
-import Char
-import List
+import Data.Char
+import Data.List
 import Data.Maybe
 import Data.IORef
 import System.IO.Unsafe
@@ -32,17 +32,17 @@ class (Eq node, Ord node, Show node) => DocNode node where
   noNode :: node
   pathNode :: node -> PathDoc
   typeOfNode :: node -> NodeType
-  
+
 data NodeType = BasicType String
               | ListType String deriving (Show, Eq)
-                
+
 -- This class allows us to access NoNode and the (Node_ .. path) in the generic part of Proxima
 -- Eq and Ord are here to reduce the number of constraints in the types
 
 data Tags = DragSourceTag | DropTargetTag Orientation deriving Show
-                   
-                                                               
-data Orientation = Horizontal | Vertical deriving Show                                                               
+
+
+data Orientation = Horizontal | Vertical deriving Show
 
 data Direction = Up | Down | Leftward | Rightward deriving (Show, Eq)
 
@@ -75,7 +75,7 @@ isTransparent c  = c == transparent
 
 -- Formatted denotes whether a column originates from a formatter (in which case the argument
 -- denotes the number of elements in each of the rows in the column)
-data Formatted = NF | F [Int] deriving (Show, Eq) 
+data Formatted = NF | F [Int] deriving (Show, Eq)
 
 -- to determine the outline of a graph node (for drawing the arrows correctly)
 type Outline = Double -> (Int, Int)
@@ -122,7 +122,7 @@ data SpecialKey =
   | F12Key
   | CharKey Char deriving Show   -- for CTRL char keys
 
-data Modifiers = Modifiers 
+data Modifiers = Modifiers
                    { shift :: Bool
                    , ctrl  :: Bool
                    , alt   :: Bool
@@ -170,9 +170,9 @@ isSelfCleanDT (DiffLeaf c) = c
 isSelfCleanDT (DiffNode c c' _) = c'
 
 
-data DiffTreeArr = DiffLeafArr !Bool (Maybe MoveRen) 
+data DiffTreeArr = DiffLeafArr !Bool (Maybe MoveRen)
                  | DiffNodeArr !Bool !Bool (Maybe MoveRen) (Maybe InsertDeleteRen) [DiffTreeArr]
---                selfAndDescendents self 
+--                selfAndDescendents self
 -- DiffTree may contain infinite lists, so don't use it to recurse on (use a path arrangement instead)
 
 -- move is not encoded in self clean: a leaf may be clean but have a move
@@ -400,24 +400,24 @@ type Property = (String, String)
 
 -- Constants for switching on incrementality, background coloring, etc.
 
-data Settings = 
+data Settings =
        Settings { applicationName :: String
                 , rendererIncrementality :: Bool
                 , arrangerIncrementality :: Bool
-                
+
                   -- use a smaller rectangle as viewed area to see what happens outside it
                 , reducedViewedArea :: Bool
-                
+
                   -- updated parts of the rendering are surrounded by red rectangles
                 , markUpdatedRenderingArea :: Bool
                 , serverPort :: Int
                 }
 
-defaultSettings = 
+defaultSettings =
   Settings { applicationName = "Proxima"
            , rendererIncrementality = False
            , arrangerIncrementality = False
-           , reducedViewedArea = False            
+           , reducedViewedArea = False
            , markUpdatedRenderingArea = False
            , serverPort = 8080
            }

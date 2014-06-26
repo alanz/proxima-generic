@@ -3,8 +3,8 @@ module Evaluation.DocTypes where
 
 import Common.CommonTypes
 
-import List
-import Char
+import Data.List
+import Data.Char
 import UU.Parsing.CharParser
 
 type FocusDoc = PathDoc  -- just a simple path focus for now
@@ -15,7 +15,7 @@ class Show doc => Doc doc where
   initialDoc :: IO doc
   toXML :: doc -> XML
   parseXML :: CharParser doc
-  
+
 data EditDocument_ wrapped doc enr node clip token =
     InitDoc
   | CloseDoc
@@ -42,12 +42,12 @@ data EditDocument'_ wrapped doc enr node clip token =
   | WrapDoc' wrapped
 
 instance Show wrapped => Show (EditDocument_ wrapped doc enr node clip token) where
-  show InitDoc         = "InitDoc" 
+  show InitDoc         = "InitDoc"
   show CloseDoc        = "CloseDoc"
   show (SetDoc doc )    = "(SetDoc {Document} {inserted&deleted} )"
-  show (SkipDoc i)     = "(SkipDoc " ++ show i ++ ")"   
-  show (WrapDoc wrapped) = "WrapDoc "++show wrapped 
-  
+  show (SkipDoc i)     = "(SkipDoc " ++ show i ++ ")"
+  show (WrapDoc wrapped) = "WrapDoc "++show wrapped
+
 
 instance (Show wrapped) => Show (EditDocument'_ wrapped doc enr node clip token) where
   show (SetDoc' doc )    = "(SetDoc' {Document})"
@@ -64,5 +64,5 @@ instance (Show wrapped) => Show (EditDocument'_ wrapped doc enr node clip token)
   show PasteDoc'        = "PasteDoc'"
   show DeleteDoc'       = "DeleteDoc'"
   show EvaluateDoc'     = "EvaluateDoc'"
-  show (SkipDoc' i)     = "(SkipDoc' " ++ show i ++ ")"   
-  show (WrapDoc' wrapped) = "WrapDoc' "++show wrapped 
+  show (SkipDoc' i)     = "(SkipDoc' " ++ show i ++ ")"
+  show (WrapDoc' wrapped) = "WrapDoc' "++show wrapped

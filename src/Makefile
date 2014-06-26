@@ -20,7 +20,7 @@ SHELL = /bin/sh
 
 .PHONY: default all agc generator arranger scanner always
 
-PROXIMADIR = ../../proxima
+PROXIMADIR = ../../proxima-generic
 
 PROXIMABINDIR = $(PROXIMADIR)/bin
 PROXIMASRCDIR = $(PROXIMADIR)/src
@@ -44,7 +44,7 @@ all: arranger scanner
 arranger: $(ARRANGEMENTDIR)/ArrangerAG.hs
 
 $(ARRANGEMENTDIR)/ArrangerAG.hs : $(ARRANGEMENTDIR)/ArrangerAG.ag \
-	
+
 	@echo uuagc: compiling arrangerAG.ag
 	@$(AGC) -scfp --Wmax=12 --genlinepragmas --self --Werrors \
 	$(ARRANGEMENTDIR)/ArrangerAG.ag --module=Arrangement.ArrangerAG -P $(ARRANGEMENTDIR)
@@ -55,12 +55,12 @@ $(ARRANGEMENTDIR)/ArrangerAG.hs : $(ARRANGEMENTDIR)/ArrangerAG.ag \
 scanner: $(LAYOUTDIR)/ScannerAG.hs
 
 $(LAYOUTDIR)/ScannerAG.hs : $(LAYOUTDIR)/ScannerAG.ag \
-	
+
 	@echo uuagc: compiling ScannerAG.ag
 	@$(AGC) -scfp --Wmax=12 --genlinepragmas --self --Werrors \
 	--cycle --visit --case --strictdata --strictwrap --strictsem --seq --strictercase --optimize --unbox \
 	$(LAYOUTDIR)/ScannerAG.ag --module=Layout.ScannerAG -P $(LAYOUTDIR)
-       
+
 # --bangpats only in GHC > 6.8.1
 
 # Cleaning
@@ -68,4 +68,4 @@ $(LAYOUTDIR)/ScannerAG.hs : $(LAYOUTDIR)/ScannerAG.ag \
 clean:
 	$(FIND) $(PROXIMASRCDIR) -name "*.hi" -delete
 	$(FIND) $(PROXIMASRCDIR) -name "*.o" -delete
-	
+

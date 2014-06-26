@@ -24,10 +24,10 @@ import Layout.LayTypes
 import Common.CommonUtils
 import Proxima.Wrap
 import Evaluation.DocTypes (DocumentLevel, EditDocument'_ (..))
-import Char
-import Maybe
+import Data.Char
+import Data.Maybe
 import System.IO
-import Directory
+import System.Directory
 import Data.Time.Clock
 import Control.Exception
 
@@ -35,13 +35,13 @@ backupFilename = "BackupDocument.xml"
 
 initialize (settings,handler,renderingLvlVar,viewedAreaRef,initialWindowSize) =
  do { initGUI
-         
+
     ; window <- windowNew
     ; onDestroy window mainQuit
     ; set window [ windowTitle := applicationName settings ]
     ; windowSetDefaultSize window (fst initialWindowSize) (snd initialWindowSize)
 
-    ; canvas <- drawingAreaNew 
+    ; canvas <- drawingAreaNew
     ; widgetSetCanFocus canvas True
     ; sw <- scrolledWindowNew Nothing Nothing
     ; hAdj <- scrolledWindowGetHAdjustment sw

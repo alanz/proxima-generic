@@ -23,7 +23,7 @@ debugLevels :: [DebugLevel]
 --debugLevels = [Err]                     -- for no Debugging
 debugLevels = allLevels                 -- for debugging on levels
 
-levels =      [ Err 
+levels =      [ Err
               , Main
               , GUI
 --              , Ren
@@ -38,7 +38,7 @@ levels =      [ Err
 --             , Cmn
               ]
 
-allLevels =   [ Err 
+allLevels =   [ Err
               , Main
               , GUI
               , Ren
@@ -57,7 +57,7 @@ allLevels =   [ Err
 -- However, it might be a bit tricky in GHCi: when the levels value is updated it might hold on to the old one
 {-
 debugLevels :: [DebugLevel]
-debugLevels = [ Err 
+debugLevels = [ Err
               , Main
               , GUI
               , Ren

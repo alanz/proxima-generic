@@ -42,7 +42,7 @@ The layouter adds whitespace according to whitespace map.
 Only the tokens of a PresentationTk.
   These are put in (possibly nested) rows, since we don't want another attribute tokens.
   Now we can use the presentation.
-  
+
   Non tokens:
   StringP?
   If an overlay is used ?
@@ -52,7 +52,7 @@ Only the tokens of a PresentationTk.
 
 Challenges/todo:
 
-TODO: 
+TODO:
 - parse error for no tokens, restore whitespace and focus. (we can store the no token idp
   that is a problem for other presentations simply in the parseError node)
 - reorder params in Token
@@ -64,7 +64,7 @@ TODO:
 - In LayPresent: enable fall back when focus was not scanned (disabled for testing)
 
 - Maybe we can store structural focus too.
-  
+
 using more than one scanners (alex has support for this)
 
 
@@ -303,7 +303,7 @@ markFocus :: (ScanChar doc enr node clip token -> ScanChar doc enr node clip tok
              [ScanChar doc enr node clip token] -> [ScanChar doc enr node clip token]
 markFocus setFocusStartOrEnd Nothing          scs = scs
 markFocus setFocusStartOrEnd focus@(Just pos) scs =
-  if not $ focusAfterLastChar scs focus 
+  if not $ focusAfterLastChar scs focus
   then let (left,rest) = splitAt (pos) scs
        in  case span isStyleScanChar rest of
              (styleChars, focusedChar:right) -> left ++ styleChars ++ setFocusStartOrEnd focusedChar : right
@@ -315,30 +315,29 @@ groupCharScanChars scanChars = groupBy sameScanCharConstr scanChars
        sameScanCharConstr (Structural _ _ _ _ _ _) (Structural _ _ _ _ _ _) = True
        sameScanCharConstr (Style _)                (Style _)                = True
        sameScanCharConstr _                        _                        = False
-       
+
 -- scan each group either with the scanner sheet or by creating structural tokens
 scanGroups sheet lex groupedScanChars =
   let lexerState = case lex of
                      Lexer lexerState _ -> lexerState
                      _                  -> defaultLexerState -- will not occur because defaultLexer is passed to 
                                                              -- scanStructural in tokenizeLay, above
-                     
+
   in  fst $ scanCharsOrStructurals sheet (lexerState,0 {- position is 0 -}) groupedScanChars
 
 -- the scanner does not yet return the lexerState (or start code). Thus, style or structural tokens will break stateful scanning
 -- such as in strings
 scanCharsOrStructurals sheet state [] = ([],state)
 scanCharsOrStructurals sheet state@(lexerState,pos) (group@(scanChar:_):groups) = -- a group is never empty
-  let (scannedTokens, state') = case scanChar of 
+  let (scannedTokens, state') = case scanChar of
                                 Char _ _ _ _ _         -> sheet state group
                                 Structural _ _ _ _ _ _ -> let (ts,p) = scanStructurals pos group in (ts, (lexerState,p))
                                 Style _                -> let (ts,p) = scanStyleTags pos group   in (ts, (lexerState,p))
-                                -- these last two don't need or change the lexerState, so we don't pass it                                                          
-                                
+                                -- these last two don't need or change the lexerState, so we don't pass it
       (scannedTokens', state'') = scanCharsOrStructurals sheet state' groups
   in  (scannedTokens++scannedTokens', state'')
 scanCharsOrStructurals sheet pos (group:groups) = debug Err ("Layout.scanCharsOrStructurals: error"++show group) ([],pos)
- 
+
 scanStructurals pos [] = ([], pos)
 scanStructurals pos (structural@(Structural idp _ _ loc tokens lay) : structuralScanChars) = 
   let scannedToken = ScannedToken (getFocusStartEnd [structural]) $ StructuralTk pos loc lay tokens idp

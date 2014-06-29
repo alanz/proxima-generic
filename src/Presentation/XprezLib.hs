@@ -1,5 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE NoMonomorphismRestriction,UndecidableInstances #-}
 module Presentation.XprezLib where
 
+import Control.Exception
 import Common.CommonTypes
 import Evaluation.DocTypes
 import Evaluation.DocumentEdit
@@ -15,8 +19,8 @@ type Xprez doc enr node clip token = Presentation doc enr node clip token
 {-
 data Xprez = Empty
            | Text String
-           | Row Int [ Xprez ] 
-           | Column Int [ Xprez ] 
+           | Row Int [ Xprez ]
+           | Column Int [ Xprez ]
            | Overlay [ Xprez ]
            | Matrix [[ Xprez ]]
            | Rectangle Int Int Int
@@ -26,7 +30,7 @@ data Xprez = Empty
            | Formatter [ Xprez ]
            | Alternative [ Xprez ]
            | With Xprez AttrRule
-           | WithC Xprez ConstrRule 
+           | WithC Xprez ConstrRule
            | Locator Xprez node deriving Show
 -}
 
@@ -45,7 +49,7 @@ overlayReverse= OverlayP NoIDP HeadAtBack
 -- different from overlayReverse [ text, image ]
 
 
---matrix = Matrix 
+--matrix = Matrix
 rect w h fillstyle = RectangleP NoIDP w h 1 fillstyle
 ellipse w h fillstyle = EllipseP NoIDP w h 1 fillstyle
 img src = ImageP NoIDP src Tile
@@ -77,9 +81,9 @@ draggableCol xps = dropTarget Vertical $ col $ map dragSource xps
 draggableRow xps = dropTarget Horizontal $ row $ map dragSource xps
 
 graph :: Int -> Int -> [(Int,Int)] -> [Xprez doc enr node clip token] -> Xprez doc enr node clip token
-graph width height edges vertexPress = 
+graph width height edges vertexPress =
   GraphP NoIDP Clean width height edges (map dragSource vertexPress)
- 
+
 vertex :: Int -> Int -> Int -> Outline -> Xprez doc enr node clip token -> Xprez doc enr node clip token
 vertex id x y outline pres = VertexP NoIDP id x y outline pres
 
@@ -95,21 +99,21 @@ structuralToken idp pres = TokenP idp (StructuralTk 0 Nothing (StructuralP idp p
 -- .pres for hole and parse error alternatives a little less cumbersome
 
 -- TODO: add presentFocus
-presHole focus typeStr nd pth = loc nd $ 
+presHole focus typeStr nd pth = loc nd $
 --  structural $ row [text $ "{"++typeStr++"}"] `withColor` black `withbgColor` yellow -- `withFontFam` ("Courier New")
   structural $ overlay [text " ", poly [(l,u),(r,u),(r,d),(l,d),(l,u)] Transparent]
  where l = 0.2
        r = 0.8
        u = 0.2
        d = 0.8
-       
+
 presParseErr node (StructuralParseErr pres) =
   loc node $ structural $ pres `withbgColor` whiteSmoke
 presParseErr node (ParsingParseErr idP parseErrs tokens lexer parser) =
-  loc node $ ParsingP idP (Just parser) lexer $ 
+  loc node $ ParsingP idP (Just parser) lexer $
      row $ [ (case lookup i positionsAndErrors of
                Nothing -> id
-               Just msg -> markError msg 
+               Just msg -> markError msg
              )  $ presFromToken token
            | (i,token) <- zip [0..] tokens ]
            ++ if null finalErrors
@@ -119,9 +123,9 @@ presParseErr node (ParsingParseErr idP parseErrs tokens lexer parser) =
        positionsAndErrors = catMaybes [ case mPos of
                                           Just p -> Just (p, msg)
                                           Nothing -> Nothing
-                                      | (mPos, msg) <- parseErrs 
+                                      | (mPos, msg) <- parseErrs
                                       ]
-       finalErrors = map snd $ filter (isNothing . fst) parseErrs 
+       finalErrors = map snd $ filter (isNothing . fst) parseErrs
 -- probably we need the lexer also in ParseErr
 
 
@@ -192,11 +196,17 @@ strikeOut :: Xprez doc enr node clip token -> Xprez doc enr node clip token
 strikeOut xp = withFont_ xp (\f -> f { fStrikeOut = True })
 
 
-withMouseDown :: forall doc enr node clip token . 
-                 Xprez doc enr node clip token -> UpdateDoc doc clip -> Xprez doc enr node clip token
-withMouseDown xp upd = withInh xp (\i -> i { mouseDown = Just $ wrap (UpdateDoc' upd :: EditDocument' doc enr node clip token) })
+withMouseDown :: forall doc enr node clip token .
+      Xprez doc enr node clip token
+   -> UpdateDoc doc clip
+   -> Xprez doc enr node clip token
+withMouseDown xp upd = withInh xp (\i -> i { mouseDown
+      -- = Nothing })
+      -- = Just $ wrap (UpdateDoc' upd :: EditDocument' doc enr node clip token) })
+      -- = Just $ wrap (UpdateDoc' upd ) })
+      = assert False undefined })
 
-withMouseDownEx :: forall doc enr node clip token . 
+withMouseDownEx :: forall doc enr node clip token .
                  Xprez doc enr node clip token -> Wrapped doc enr node clip token -> Xprez doc enr node clip token
 withMouseDownEx xp editop = withInh xp (\i -> i { mouseDown = Just editop })
 
@@ -208,7 +218,7 @@ withInheritablePopupMenuItems_ :: Xprez doc enr node clip token -> ([PopupMenuIt
 withInheritablePopupMenuItems_ xp fmis = withInh xp (\i -> i { inheritablePopupMenuItems = fmis (inheritablePopupMenuItems i) })
 
 addPopupItems :: Xprez doc enr node clip token -> [PopupMenuItem doc enr node clip token] -> Xprez doc enr node clip token
-addPopupItems xp mis = withInheritablePopupMenuItems_ xp (\pmis -> mis++pmis) 
+addPopupItems xp mis = withInheritablePopupMenuItems_ xp (\pmis -> mis++pmis)
 
 withLocalPopupMenuItems :: Xprez doc enr node clip token -> [PopupMenuItem doc enr node clip token] -> Xprez doc enr node clip token
 withLocalPopupMenuItems xp mis = withInh xp (\i -> i { localPopupMenuItems = mis })
@@ -217,7 +227,7 @@ withLocalPopupMenuItems_ :: Xprez doc enr node clip token -> ([PopupMenuItem doc
 withLocalPopupMenuItems_ xp fmis = withInh xp (\i -> i { localPopupMenuItems = fmis (localPopupMenuItems i) })
 
 addLocalPopupItems :: Xprez doc enr node clip token -> [PopupMenuItem doc enr node clip token] -> Xprez doc enr node clip token
-addLocalPopupItems xp mis = withLocalPopupMenuItems_ xp (\pmis -> mis++pmis) 
+addLocalPopupItems xp mis = withLocalPopupMenuItems_ xp (\pmis -> mis++pmis)
 
 withHRef :: Xprez doc enr node clip token -> Int -> Xprez doc enr node clip token
 withHRef xp h = withSyn xp (\s -> s { hRef = h })

@@ -1,7 +1,13 @@
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE UndecidableInstances, NoMonomorphismRestriction #-}
 module Presentation.PresentationParsing ( module Presentation.PresentationParsing
-                                        , module UU.Parsing 
+                                        , module UU.Parsing
                                         ) where
 
+import Control.Exception
 import Common.CommonTypes
 import Presentation.PresTypes
 import Presentation.PresLayerTypes
@@ -16,11 +22,11 @@ import Debug.Trace
 reuse = Nothing
 set = Just
 
-parsePres :: (Show enr, DocNode node, Ord token, Show token) => 
+parsePres :: (Show enr, DocNode node, Ord token, Show token) =>
              ListParser doc enr node clip token enr -> PresentationBase doc enr node clip token level -> Maybe enr
-parsePres recognizeEnrichedDoc (TokenP _ (StructuralTk _ _ _ tokens _)) = 
+parsePres recognizeEnrichedDoc (TokenP _ (StructuralTk _ _ _ tokens _)) =
   let (enr,errs) = runParser recognizeEnrichedDoc tokens
-  in --debug Err ("Parsing:\n"++concatMap (deepShowTks 0) (tokens) 
+  in --debug Err ("Parsing:\n"++concatMap (deepShowTks 0) (tokens)
      --             ++"\nhas result:"++show enr ) $
      if null errs then Just enr else Nothing
 
@@ -28,10 +34,12 @@ parsePres _ _    = error "parsePres: scanned presentation has wrong format"
 
 pMaybe parser = Just <$> parser `opt` Nothing
 
+-- pStructuralTk :: IsParser p (Token doc enr node clip token)
+--    => (t -> [a] -> node) -> p (Token doc enr node clip token)
 pStructuralTk nd = pSym (StructuralTk 0 (Just $ nd (error "This should not have happened") []) (EmptyP NoIDP) [] NoIDP)
 
 
-applyDummyParameters nd = nd (error "This should not have happened") [] 
+applyDummyParameters nd = nd (error "This should not have happened") []
 
 
 -- continues parsing on the children inside the structural token. the structural token is put in front
@@ -42,22 +50,66 @@ pStr = pStr' (EmptyP NoIDP)
 
 pStrVerbose str = pStr' (StringP NoIDP str)
 
-pStr' prs p = unfoldStructure  
+pStr' prs p = unfoldStructure
      <$> pSym (StructuralTk 0 Nothing prs [] NoIDP)
- where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) = 
+ where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) =
          let (res, errs) = runParser (addHoleParser p) (structTk : tokens) {- (p <|> hole/parseErr parser)-}
          in  if null errs then res else debug Err ("ERROR: Parse error in structural parser:"++(show errs)) parseErr (StructuralParseErr pr)
        unfoldStructure _ = error "NewParser.pStr structural parser returned non structural token.."
 
 -- The scoped type variable is necessary to get hole and holeNodeConstr of the same type a.
-addHoleParser :: forall a doc enr node clip token . (DocNode node, Ord token, Show token, Editable a doc enr node clip token) => ListParser doc enr node clip token a -> ListParser doc enr node clip token a 
+addHoleParser :: -- forall a doc enr node clip token .
+     (DocNode node, Ord token, Show token,
+      Editable a doc enr node clip token)
+   => ListParser doc enr node clip token a
+   -> ListParser doc enr node clip token a
 addHoleParser p =
-  p <|> hole <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)
-  
+  -- p <|> hole <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)
+  -- p <|> hole <$ pStructuralTk holeNodeConstr
+  -- p <|> (((hole :: a) <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)) :: ListParser doc enr node clip token a)
+  assert False undefined
 
-pStr'' nodeC hole p = unfoldStructure  
+{-
+pStructuralTk ::
+  IsParser p (Token doc enr node clip token) =>
+  (a -> [b] -> node) -> p (Token doc enr node clip token)
+  	-- Defined at Presentation/PresentationParsing.hs:38:1
+
+type ListParser doc enr node clip token a =
+  Parser (Token doc enr node clip token) a
+  	-- Defined at Presentation/PresTypes.hs:85:6
+
+class Editable a doc enr node clip token | a -> doc
+                                                enr
+                                                node
+                                                clip
+                                                token where
+  ...
+  hole :: a
+  holeNodeConstr :: a -> Path -> node
+  ...
+  	-- Defined at Evaluation/DocumentEdit.hs:27:3
+
+
+class IsParser p s | p -> s where
+  ...
+  (<|>) :: p a -> p a -> p a
+  ...
+  	-- Defined in `UU.Parsing.Interface'
+infixl 3 <|>
+
+class IsParser p s | p -> s where
+  ...
+  (<$) :: b -> p a -> p b -- defined as : f <$  q = pSucceed f <*  q
+  ...
+  	-- Defined in `UU.Parsing.Interface'
+infixl 4 <$
+
+-}
+
+pStr'' nodeC hole p = unfoldStructure
      <$> pSym (StructuralTk 0 Nothing (EmptyP NoIDP) [] NoIDP)
- where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) = 
+ where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) =
          let pOrHole = p <|> hole <$ pStructuralTk nodeC
              (res, errs) = runParser pOrHole (structTk : tokens) {- (p <|> hole/parseErr parser)-}
          in  if null errs then res else debug Err ("ERROR: Parse error in structural parser:"++(show errs)) parseErr (StructuralParseErr pr)
@@ -66,13 +118,13 @@ pStr'' nodeC hole p = unfoldStructure
 
 -- version of pStr that gets a constructor from the data type Node, that specifies
 -- the type and constructor it should succeed on.
-pStrAlt ndf p = unfoldStructure  
+pStrAlt ndf p = unfoldStructure
      <$> pSym (StructuralTk 0 (Just nd) (StringP NoIDP $ show nd) [] NoIDP)
- where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) = 
+ where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) =
          let (res, errs) = runParser p (structTk : tokens) {- (p <|> hole/parseErr parser)-}
           in if null errs then res else debug Err ("ERROR: Parse error in structural parser:"++(show errs)) parseErr (StructuralParseErr pr)
        unfoldStructure _ = error "NewParser.pStr structural parser returned non structural token.."
-       
+
        nd = applyDummyParameters ndf
 
 
@@ -95,35 +147,39 @@ pStrAlt ndf p = unfoldStructure
 f <@> p = undefined
 
 -- is this right?
-pInc :: (DocNode node, Ord token, Show token) => 
+pInc :: (DocNode node, Ord token, Show token) =>
         ListParser doc enr node clip token a  -> ListParser doc enr node clip token a
 pInc p = pWrap f f' p
  where f'     state@(tk:_) steps k = (state, steps, k)
-       f  brr state@(tk:_) steps k = 
+       f  brr state@(tk:_) steps k =
          case getValIfUnchanged tk of
            Nothing -> (state, val (uncurry brr) steps, k)
            Just (v,nrOfToks) ->  (state, val (uncurry brr) (NoMoreSteps v), (\_ -> k (drop nrOfToks state)))
-           
+
 getValIfUnchanged :: token -> Maybe (a, Int)
 getValIfUnchanged = undefined
-           
+
+pSkip :: (DocNode node, Ord token, Show token) => Int -> ListParser doc enr node clip token ()
+pSkip n = undefined
+{-
 pSkip :: (DocNode node, Ord token, Show token) => Int -> ListParser doc enr node clip token ()
 pSkip n = pMap f f' (pSucceed ())
  where f  brr state steps = (drop n state, val (uncurry brr) steps)
        f' state steps     = (drop n state, steps)
 
 {-
-           => (forall r  r'' .   (b -> r -> r'') 
+           => (forall r  r'' .   (b -> r -> r'')
                                     -> state
-                                    -> Steps (a, r) s p 
-                                    -> (state -> Steps r s p) 
+                                    -> Steps (a, r) s p
+                                    -> (state -> Steps r s p)
                                     -> (state, Steps r'' s p, state -> Steps r s p))
-           -> (forall r        .   state  
-                                -> Steps r s p 
-                                -> (state -> Steps r s p) 
-                                -> (state, Steps r s p, state -> Steps r s p)) 
+           -> (forall r        .   state
+                                -> Steps r s p
+                                -> (state -> Steps r s p)
+                                -> (state, Steps r s p, state -> Steps r s p))
            -> AnaParser state result s p a -> AnaParser state result s p b
 
+-}
 -}
 
 pStrDirty ::  (Editable a doc enr node clip token, DocNode node, Ord token, Show token) => ListParser doc enr node clip token (a, Dirty) -> ListParser doc enr node clip token (a, Dirty)
@@ -134,26 +190,26 @@ pStrDirty p = pStrExtra Dirty p
 -- extraDefault is a default value for this type in case of a parse error.
 pStrExtra ::  (Editable a doc enr node clip token, DocNode node, Ord token, Show token) =>
               b -> ListParser doc enr node clip token (a, b) -> ListParser doc enr node clip token (a, b)
-pStrExtra extraDefault p = unfoldStructure  
+pStrExtra extraDefault p = unfoldStructure
      <$> pSym (StructuralTk 0 Nothing (EmptyP NoIDP) [] NoIDP)
- where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) = 
+ where unfoldStructure structTk@(StructuralTk _ nd pr tokens _) =
          let (res, errs) = runParser p (structTk : tokens) {- (p <|> hole/parseErr parser)-}
-         in  if null errs 
-             then res 
+         in  if null errs
+             then res
              else debug Err ("ERROR: Parse error in structural parser:"++(show errs))
                         (parseErr (StructuralParseErr pr),extraDefault)
        unfoldStructure _ = error "NewParser.pStr structural parser returned non structural token.."
 
 -- TODO: why do we need the 's in Editable?
 pPrs ::  (Editable a doc enr node clip token, DocNode node, Ord token, Show token) => ListParser doc enr node clip token a -> ListParser doc enr node clip token a
-pPrs p = unfoldStructure  
+pPrs p = unfoldStructure
      <$> pSym (ParsingTk Nothing Nothing [] NoIDP)
- where unfoldStructure presTk@(ParsingTk _ _ tokens idP) = 
+ where unfoldStructure presTk@(ParsingTk _ _ tokens idP) =
          let (res, errs) = runParser p tokens
-         in  if null errs 
-             then res 
+         in  if null errs
+             then res
              else debug Err ("ERROR: Parse error"++(show errs)) $
-                  parseErr (ParsingParseErr idP (mkErrs errs) tokens 
+                  parseErr (ParsingParseErr idP (mkErrs errs) tokens
                            (debug Err "pPrs: lexer not specified in parse error, better use parsingWithParserLexer method" LexInherited) (mkClipParser LexInherited p))
              -- the lexer is not available here. But pPrs is kind of obsolete anyway
        unfoldStructure _ = error "NewParser.pStr structural parser returned non structural token.."
@@ -172,33 +228,33 @@ addInserted :: (DocNode node, Ord token, Show token) =>
                [Message (Token doc enr node clip token) (Maybe (Token doc enr node clip token)) ] ->
                [Token doc enr node clip token] -> [Token doc enr node clip token]
 addInserted messages tokens = foldl  insertAt tokens inserts
- where inserts = catMaybes [ case act of 
-                               Insert t -> 
+ where inserts = catMaybes [ case act of
+                               Insert t ->
                                  let insertedT = setTokenIDP (IDP (-666)) t
                                  in  case pos of
                                        Just postoken -> Just (getTokenPosition postoken, insertedT)
                                        Nothing       -> Just (Nothing, insertedT)
                                _        -> Nothing
-                               
+
                            | (Msg _ pos act) <- messages ]
        insertAt ts     (Nothing,token) = ts ++ [token]
        insertAt []     (Just p,token)  = debug Err ("PresentationParsing.addInserted: incorrect position in token "++show token) $ []
-       insertAt (t:ts) (Just p,token)  = if getTokenPosition t == Just p 
-                                         then token : t : ts 
+       insertAt (t:ts) (Just p,token)  = if getTokenPosition t == Just p
+                                         then token : t : ts
                                          else t : insertAt ts (Just p,token)
 -}
-                                       
+
 mkErrs :: (DocNode node, Ord token, Show token) =>
          [Message (Token doc enr node clip token) (Maybe (Token doc enr node clip token)) ] -> 
          [ParseErrorMessage]
 mkErrs []                        = []
-mkErrs (msg@(Msg _ pos _):msgs)  = 
+mkErrs (msg@(Msg _ pos _):msgs)  =
   case pos of
     Just t@(ErrorTk _ _ _) ->  [(getTokenPosition t, showMessage msg)]
     Just t ->                  (getTokenPosition t, showMessage msg) : mkErrs msgs
     Nothing ->                 (Nothing, showMessage msg)            : mkErrs msgs
-     
-   
+
+
 getTokenPosition (UserTk p _ _ _ _)       = Just p
 getTokenPosition (StructuralTk p _ _ _ _) = Just p
 getTokenPosition (ErrorTk p _ _)          = Just p
@@ -211,7 +267,7 @@ showMessage :: (DocNode node, Ord token, Show token) =>
                  Message (Token doc enr node clip token) (Maybe (Token doc enr node clip token)) -> String
 showMessage (Msg expecting (Just (ErrorTk _ (c:_) _)) action) = "Lexical error at character "++show c
     -- there will always be at least one offending character
-showMessage (Msg expecting position action)  
+showMessage (Msg expecting position action)
    =  "Parse error at " ++ showPosition position ++ "\n" ++
       "Expecting:   " ++ showExpecting expecting ++ "\n" ++
       "Repaired by: "  ++ showAction action ++"\n"
@@ -236,9 +292,9 @@ showRange (Range a b) = if a == b then tokenString a else tokenString a ++ ".." 
 
 showAction :: (DocNode node, Ord token, Show token) =>
               Action (Token doc enr node clip token) -> String
-showAction (Insert t) = "inserting: " ++ tokenString t 
-showAction (Delete t) = "deleting: "  ++ tokenString t 
-showAction (Other t)  = t 
+showAction (Insert t) = "inserting: " ++ tokenString t
+showAction (Delete t) = "deleting: "  ++ tokenString t
+showAction (Other t)  = t
 
 
 retrieveTokenPosition errStr messageText =
@@ -251,7 +307,7 @@ drop' [] ys = Just ys
 drop' xs [] = Nothing
 drop' xs (y:ys) = if xs `isPrefixOf` (y:ys)
                   then Just $ drop (length xs) $ y:ys
-                  else drop' xs ys 
+                  else drop' xs ys
 -- Does parseErr need a location? It used to be NoNode anyway.
 
 -- hole parser
@@ -296,7 +352,7 @@ newtype ParsePres doc enr node clip token a b c = ParsePres (Presentation doc en
 
 
 
-  
+
 
 
 
@@ -305,8 +361,8 @@ instance (DocNode node, Ord token, Show token) => Symbol (Token doc enr node cli
 
 runParser (pp) inp =
       let res = parse pp inp
-          (Pair v final) = evalSteps (res) 
-          errs = getMsgs (res) 
+          (Pair v final) = evalSteps (res)
+          errs = getMsgs (res)
       in  (v, errs)
 
 
@@ -365,12 +421,12 @@ class Construct doc enr node clip token where
 -- does not take into account idP of parsingTk yet (for leading whitespace)
 mkClipParser :: (Editable a doc enr node clip token, DocNode node, Ord token, Show token) =>
                 Lexer -> ListParser doc enr node clip token a -> ClipParser doc enr node clip token
-mkClipParser lexer parser = 
- let clipParser = 
+mkClipParser lexer parser =
+ let clipParser =
        \tokens ->
          let (res, errs) = runParser parser tokens
-         in  toClip $ if null errs then res 
-                      else debug Prs ("Presentation parser:\n"++(show errs)) $ 
+         in  toClip $ if null errs then res
+                      else debug Prs ("Presentation parser:\n"++(show errs)) $
                              parseErr (ParsingParseErr NoIDP (mkErrs errs) tokens lexer clipParser)
  in  clipParser
 
@@ -389,14 +445,14 @@ pStructuralConstr nodeConstr = pStructuralEx (Just nodeConstr)
 {- recognizeEx parses a structural token and reconizes its structure. The argument can be
    Nothing, in which case any structural token is matched, or it can be a Just node constructor,
    in which case the parser only succeeds on a structural token with that constructor.
--}   
+-}
 pStructuralEx :: (Editable a doc enr node clip token, Clip clip, Construct doc enr node clip token,
                 DocNode node, Ord token, Show token, Show clip) =>
                 Maybe (a -> Path -> node) -> ListParser doc enr node clip token a
-pStructuralEx mNodeConstr =  
+pStructuralEx mNodeConstr =
           (\structuralToken -> --debug Prs ("pStructural on\n"++deepShowTks 0 structuralToken) $
                    let clip = recognizeClip structuralToken
-                   in  case fromClip clip of 
+                   in  case fromClip clip of
                          Just enr -> enr
                          Nothing  -> error $ "Error"++show clip )
       <$> case mNodeConstr of
@@ -407,17 +463,17 @@ pStructuralEx mNodeConstr =
 
 recognizeClip :: (Clip clip, Construct doc enr node clip token, DocNode node, Show token, Ord token) =>
              Token doc enr node clip token -> clip
-recognizeClip strTk@(StructuralTk _ (Just node) _ childTokens _) = 
+recognizeClip strTk@(StructuralTk _ (Just node) _ childTokens _) =
   --debug Prs ("Recognize on "++show node++" with children"++show childTokens) $
-  if isListClip (construct node strTk []) 
-  then 
+  if isListClip (construct node strTk [])
+  then
   let thisPath = case pathNode node of
                    PathD path -> path
                    NoPathD    -> error $ "recognize: Encountered StructuralTk that has node without path:" ++ show strTk
       eltTokens = map (snd . tokenPath thisPath) childTokens -- we do the checks, but discard the numbers
       eltClips = map (Just. recognizeClip) eltTokens
   in  construct node strTk eltClips -- for lists construct does not call reuse
-  else    
+  else
   let thisPath = case pathNode node of
                    PathD path -> path
                    NoPathD    -> error $ "recognize: Encountered StructuralTk that has node without path:" ++ show strTk
@@ -438,22 +494,22 @@ recognizeClip strTk@(StructuralTk _ (Just node) _ childTokens _) =
       result
 recognizeClip tk@(StructuralTk _ Nothing _ childTokens _) =
   error $ "recognize: Encountered StructuralTk without node: " ++ show tk
-recognizeClip tk@(ParsingTk (Just parser) _ childTokens _) = 
+recognizeClip tk@(ParsingTk (Just parser) _ childTokens _) =
   parser childTokens
-recognizeClip tk@(ParsingTk Nothing _ childTokens _) = 
+recognizeClip tk@(ParsingTk Nothing _ childTokens _) =
   error $ "recognize: Encountered ParsingTk without parser: " ++ show tk
 recognizeClip tk =
   error $ "recognize: Encountered token other than StructuralTk or ParsingTk: " ++ show tk
 
 tokenPath :: (Construct doc enr node clip token, DocNode node, Show token) => Path -> Token doc enr node clip token -> (Int, Token doc enr node clip token)
 tokenPath parentPath tk =
-  let node = case tk of 
+  let node = case tk of
                (StructuralTk _ (Just node) _ _ _) -> node
                (StructuralTk _ Nothing _ _ _)     -> error $ "tokenPath: childToken without node" ++ show tk
                (ParsingTk _ (Just node) _ _) -> node
                (ParsingTk _ Nothing _ _)     -> error $ "tokenPath: childToken without node" ++ show tk
   in case pathNode node of
-       PathD path -> if parentPath `isPrefixOf` path 
+       PathD path -> if parentPath `isPrefixOf` path
                      then case drop (length parentPath) path of
                             [childNr] -> (childNr, tk)
                             _ -> error $ "encountered token that is not a child: tokenPath=" ++show path ++ 
@@ -470,10 +526,10 @@ addChildTokens childTokenGroups (childToken: childTokens) =
            (left, group:right) -> left ++ (group ++ [childToken]) : right
            _                   -> error $ "addChildToken: encountered child with number larger than parent's arity: nr="++show nr ++ " token="++show childToken 
 
-     
+
 -- If the argument is nothing, return Nothing (for reuse), otherwise apply fromClip to the
 -- argument.
-retrieveArg :: (Editable a doc enr node clip token, Show clip) => 
+retrieveArg :: (Editable a doc enr node clip token, Show clip) =>
                String -> String -> Maybe clip -> Maybe a
 retrieveArg parentCnstrName expectedTypeName (Just clip) =
   case fromClip clip of

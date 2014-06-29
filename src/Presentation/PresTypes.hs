@@ -36,7 +36,7 @@ type IDPCounter = Int                   -- Counter for generating new unique IDP
 
 --instance (Show a, Show b) => Show (FiniteMap a b) where
 -- show fm = "{FiniteMap}" -- ++show (fmToList fm)
- 
+
 
 initLayout :: WhitespaceMap
 initLayout = Map.fromList []
@@ -45,7 +45,7 @@ type ParseErrorMessage = (Maybe Int, String)
 
 getErrorMessages (ParsingParseErr _ msgs _ _ _) = msgs
 getErrorMessages _                          = [(Nothing, "Structural parse error")]
--- structural parse errors should not occur and therefore do not need to be 
+-- structural parse errors should not occur and therefore do not need to be
 -- accessible in the presentation AG (other than this string).
 
 data ParseError doc enr node clip token = ParsingParseErr IDP [ParseErrorMessage] [Token doc enr node clip token] Lexer (ClipParser doc enr node clip token)
@@ -59,7 +59,7 @@ instance (Typeable doc, Typeable enr, Typeable node, Typeable clip, Typeable tok
 instance Show (ParseError doc enr node clip token) where
   show (ParsingParseErr _ _ _ _ _) = "ParsingParseErr"
   show (StructuralParseErr _) = "StructuralParseErr"
-  
+
 data EditPresentation'_ wrapped doc enr node clip token =
     SetPres' (PresentationLevel doc enr node clip token)
   | SkipPres' Int
@@ -221,7 +221,7 @@ getTokenFontSize t = debug Err ("getTokenFontSize called on wrong token:" ++ sho
 getTokenColor (StyleTk _ (ScannedStyleTag (ScannedColor c) _)) = c
 getTokenColor t = debug Err ("getTokenColor called on wrong token:" ++ show t) (-1,-1,-1)
 
-getTokenIDP :: Token doc enr node clip token -> IDP       
+getTokenIDP :: Token doc enr node clip token -> IDP
 getTokenIDP (UserTk _ u s n id) = id
 getTokenIDP (StructuralTk _ n _ _ id)  = id
 getTokenIDP (GraphTk d es n id) = id
@@ -246,14 +246,14 @@ deepShowTks i tok = case tok of
                                                ++ indent (i+1)++"[\n"
                                                ++ concatMap (deepShowTks (i+1)) cs 
                                                ++ indent (i+1)++" ]\n"
-                      _                     -> indent i ++ show tok ++ "\n" 
+                      _                     -> indent i ++ show tok ++ "\n"
  where indent i = take i (repeat ' ')
 
 
 
-data Pres_ 
+data Pres_
 
-type Presentation doc enr node clip token = 
+type Presentation doc enr node clip token =
        PresentationBase doc enr node clip token Pres_
 
 
@@ -272,47 +272,47 @@ Moreover, any function that has a TokenP case will get inferred type Pres_, so i
 to work on Layout as well, it should be given an explicit PresentationBase ... x type signature.
 -}
 data PresentationBase doc enr node clip userToken level where
-       EmptyP  :: !IDP -> 
-                  PresentationBase doc enr node clip userToken level 
-       StringP :: !IDP -> !String  -> 
-                  PresentationBase doc enr node clip userToken level 
+       EmptyP  :: !IDP ->
+                  PresentationBase doc enr node clip userToken level
+       StringP :: !IDP -> !String  ->
+                  PresentationBase doc enr node clip userToken level
        TokenP  :: !IDP -> !(Token doc enr node clip userToken) ->
-                  PresentationBase doc enr node clip userToken Pres_ 
+                  PresentationBase doc enr node clip userToken Pres_
        ImageP  :: !IDP -> !String -> !ImgStyle ->
-                  PresentationBase doc enr node clip userToken level 
+                  PresentationBase doc enr node clip userToken level
        PolyP   :: !IDP -> ![Point] -> !LineWidth -> !FillStyle ->
-                  PresentationBase doc enr node clip userToken level 
-       RectangleP :: !IDP -> !Width -> !Height -> !LineWidth -> !FillStyle -> 
-                     PresentationBase doc enr node clip userToken level 
-       EllipseP   :: !IDP -> !Width -> !Height -> !LineWidth -> !FillStyle -> 
-                     PresentationBase doc enr node clip userToken level 
+                  PresentationBase doc enr node clip userToken level
+       RectangleP :: !IDP -> !Width -> !Height -> !LineWidth -> !FillStyle ->
+                     PresentationBase doc enr node clip userToken level
+       EllipseP   :: !IDP -> !Width -> !Height -> !LineWidth -> !FillStyle ->
+                     PresentationBase doc enr node clip userToken level
        RowP     :: !IDP -> !HRefNr -> ![PresentationBase doc enr node clip userToken level] ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        ColP     :: !IDP -> !VRefNr -> !Formatted -> ![PresentationBase doc enr node clip userToken level] ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        OverlayP :: !IDP -> !Order -> ![ (PresentationBase doc enr node clip userToken level) ] ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        WithP    :: !(AttrRule doc enr node clip userToken) -> !(PresentationBase doc enr node clip userToken level) ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        StructuralP :: !IDP -> !(PresentationBase doc enr node clip userToken level) ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        ParsingP :: !IDP -> !(Maybe (ClipParser doc enr node clip userToken)) -> !Lexer -> !(PresentationBase doc enr node clip userToken level) ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        LocatorP :: node -> !(PresentationBase doc enr node clip userToken level) ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        TagP :: Tags -> !(PresentationBase doc enr node clip userToken level) ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
 
        GraphP   :: !IDP -> !Dirty -> !Width -> !Height -> ![Edge] -> ![PresentationBase doc enr node clip userToken level] ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        VertexP  :: !IDP -> !VertexID -> !XCoord -> !YCoord -> Outline -> !(PresentationBase doc enr node clip userToken level) ->
-                   PresentationBase doc enr node clip userToken level 
+                   PresentationBase doc enr node clip userToken level
        FormatterP :: !IDP -> ![PresentationBase doc enr node clip userToken level] ->
-                     PresentationBase doc enr node clip userToken level 
-       ArrangedP :: PresentationBase doc enr node clip userToken level 
+                     PresentationBase doc enr node clip userToken level
+       ArrangedP :: PresentationBase doc enr node clip userToken level
        -- some of these !'s do not make sense (and it's probably time to factorize this thing)
 
- 
+
        -- ArrangedP is experimental for incrementality.
        -- arranger gets Presentation in which unchanged subtrees are replaced by
        -- this node. For these subtrees, old arrangement is used
@@ -449,7 +449,7 @@ presentation is as big as the presentation, it will always get the focus in that
 
 
 -- String has no reference, it would be rather useless, but if String is a row of characters, then it  
--- it could be logical in some cases 
+-- it could be logical in some cases
 
 
 
@@ -498,7 +498,7 @@ type UpdateDoc doc clip = DocumentLevel doc clip -> DocumentLevel doc clip
 
 type PopupMenuItem doc enr node clip token = (String, Wrapped doc enr node clip token)
 
-data PathPres = PathP [Int] Int 
+data PathPres = PathP [Int] Int
               | NoPathP deriving (Show, Eq, Ord)
 
 data FocusPres = FocusP PathPres PathPres

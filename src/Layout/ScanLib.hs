@@ -16,7 +16,7 @@ Some scanner functionality could not be factorized and can be found in AlexTempl
 -----------------------------------------------------------------------------------------
 
 module Layout.ScanLib ( module Layout.ScanLib
-                      , module Maybe
+                      , module Data.Maybe
                       , module Common.DebugLevels
                       , module Layout.LayLayerTypes
                       , module Layout.LayLayerUtils
@@ -40,17 +40,17 @@ mkToken = mkTokenEx id
 -- the first strf is for manipulating the string that is stored in the token
 mkTokenEx :: (String->String) -> (String -> userToken) -> ScannerState -> [ScanChar doc enr node clip userToken] -> 
            (ScannedToken doc enr node clip userToken, ScannerState)
-mkTokenEx strf tokf (startCode,tokenPos) scs = 
+mkTokenEx strf tokf (startCode,tokenPos) scs =
   let str = strf $ stringFromScanChars scs
       idp = idPFromScanChars scs
       loc = locFromScanChars scs
       userToken = tokf str
-                                                   
+
   in  ( ScannedToken (getFocusStartEnd scs) $ UserTk tokenPos userToken str loc idp
       , (startCode,tokenPos + 1)
       )
 
-collectWhitespace :: ScannerState -> [ScanChar doc enr node clip userToken] -> 
+collectWhitespace :: ScannerState -> [ScanChar doc enr node clip userToken] ->
                      (ScannedToken doc enr node clip userToken, ScannerState)
 collectWhitespace tokenPos scs =
   let whitespaceChars = stringFromScanChars scs

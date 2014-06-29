@@ -1,10 +1,13 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module Presentation.PresUtils (module Presentation.XprezLib, module Presentation.PresUtils) where
 
 import Common.CommonTypes
 import Presentation.PresTypes
 import Layout.LayTypes
 import Common.CommonUtils
-import Proxima.Wrap 
+import Proxima.Wrap
 import Presentation.XprezLib
 import Data.Maybe
 import Data.List
@@ -19,7 +22,7 @@ ifFocusP (FocusP _ _)       exp = exp
 ifPathP NoPathP _       = NoPathP
 ifPathP (PathP _ _) exp = exp
 
-consFocusP s foc@(FocusP from to) = FocusP (consPathP s from) (consPathP s to) 
+consFocusP s foc@(FocusP from to) = FocusP (consPathP s from) (consPathP s to)
 consFocusP s _                    = NoFocusP
 
 consPathP s p@(PathP pth ix) = ifPathP p $ PathP (s:pth) ix
@@ -38,8 +41,9 @@ showPathNodesP (p:pth) pres = shallowShowPres pres ++ "\n" ++
                                in  if p < length children
                                    then showPathNodesP pth (index "PresUtils.showPathNodesP" children p)
                                    else "PresUtils.showPathNodesP: index out of bounds"
-                            
-xyFromPath :: (DocNode node, Show token) => PathPres -> Layout doc enr node clip token -> (Int,Int, Bool)
+
+-- xyFromPath :: (DocNode node, Show token)
+--    => PathPres -> Layout doc enr node clip token -> (Int,Int, Bool)
 xyFromPath path pres = xyFromPathPres 0 0 path pres
 
 pathFromXY :: (DocNode node, Show token) => (Int,Int,Bool) -> Layout doc enr node clip token -> PathPres
@@ -56,9 +60,23 @@ pathFromXY xy pres = pathFromXYPres xy pres
 -- partially visible.
 
 -- a smarter diff for rows and columns may try to approach from both directions.
- 
+
 -- skip WithP StructuralP ParsingP and LocatorP elts
-diffPres :: (DocNode node, Eq token, Show token) => PresentationBase doc enr node clip token level -> PresentationBase doc enr node clip token level -> DiffTree
+
+-- ++AZ++ NOTE: fails with rigid type error if a type sig is present
+-- diffPres :: (Eq node, Eq token, Show node, Show token) -- (DocNode node, Eq token, Show token)
+--    => PresentationBase doc enr node clip token level
+--    -> PresentationBase doc enr node clip token level
+--    -> DiffTree
+{-
+*Presentation.PresUtils> :i diffPres
+diffPres ::
+  (Eq t3, Eq t5, Show t3, Show t5) =>
+  PresentationBase t1 t2 t3 t4 t5 t
+  -> PresentationBase t1 t2 t3 t4 t5 t6 -> DiffTree
+  	-- Defined at Presentation/PresUtils.hs:75:1
+*Presentation.PresUtils> :load "Presentation/PresUtils.hs"
+-}
 
 -- WithP is not handled yet.
 -- Graph is not handled right yet!
@@ -94,9 +112,9 @@ diffPres (RectangleP id  w h lw style) (RectangleP _ w' h' lw' style')  = DiffLe
 diffPres (RectangleP id  _ _ _ _) _                          = DiffLeaf False
 diffPres (EllipseP id  w h lw style) (EllipseP _ w' h' lw' style')  = DiffLeaf $ w==w' && h==h' && lw==lw' && style == style'
 diffPres (EllipseP id _ _ _ _) _                        = DiffLeaf False
-diffPres (RowP id rf press) (RowP id' rf' press')  = diffPress rf press rf' press'
-diffPres (ColP id rf _ press) (ColP id' rf' _ press')  = diffPress rf press rf' press'
-diffPres (OverlayP id d press) (OverlayP id' d' press') = diffPress d  press d'   press'
+diffPres (RowP id rf press) (RowP id' rf' press')       = diffPress rf press rf' press'
+diffPres (ColP id rf _ press) (ColP id' rf' _ press')   = diffPress rf press rf' press'
+-- ++AZ++ temporary for now diffPres (OverlayP id d press) (OverlayP id' d' press') = diffPress d  press d'   press'
   -- Note: we abuse the rf paramter of diffPress and give it the direction.
 diffPres (FormatterP id press) (FormatterP id' press')  = diffPress 0 press 0 press'
 --diffPres (GraphP _ _ _ _ _ _) (GraphP _ dirty _ _ _ _) = DiffLeaf $ isClean dirty 
@@ -105,7 +123,7 @@ diffPres (VertexP id _ _ _ _ pres) (VertexP id' _ _ _ _ pres') = diffPres pres p
 diffPres (RowP id rf press) _                      = DiffLeaf False
 diffPres (ColP id rf _ press) _                    = DiffLeaf False
 diffPres (FormatterP id press) _                   = DiffLeaf False
-diffPres (OverlayP id _ press) _                     = DiffLeaf False 
+diffPres (OverlayP id _ press) _                     = DiffLeaf False
 diffPres (GraphP id _ _ _ _ press) _               = DiffLeaf False
 diffPres (VertexP id _ _ _ _ pres) _                 = DiffLeaf False
 diffPres pr                  _                     = debug Err ("PresUtils.diffPres: can't handle "++ show pr) DiffLeaf False
@@ -372,7 +390,8 @@ isEditableTreePres' editable pth      pr                         = debug Err ("*
 -- hack for repositioning focus after document present or normalize
 -- goes wrong if focus is in empty string on left side of column
 
--- Bool is for disambiguating end of one string and start of the next. True means at start of string
+-- Bool is for disambiguating end of one string and start of the next.
+   -- True means at start of string
 xyFromPathPres x y (PathP p i)     (EmptyP _)                = (x, y, i==0)  -- should not occur
 xyFromPathPres x y (PathP p i)     (StringP _ str)           = (x+i, y, i==0 && length str /= 0 )
 xyFromPathPres x y (PathP p i)     (ImageP _ _ _)            = (x, y, i==0)
@@ -382,9 +401,9 @@ xyFromPathPres x y path           pr@(ColP id rf _ press)    = xyFromPathCol (x+
 xyFromPathPres x y (PathP (0:p) i) (OverlayP _ _ (pres:press)) = xyFromPathPres x y (PathP p i) pres
 xyFromPathPres x y (PathP (_:p) i) (WithP ar pres)           = xyFromPathPres x y (PathP p i) pres
 xyFromPathPres x y (PathP (_:p) i) (StructuralP id pres)     = xyFromPathPres x y (PathP p i) pres
-xyFromPathPres x y (PathP (_:p) i) (ParsingP id _ _ pres)      = xyFromPathPres x y (PathP p i) pres
+xyFromPathPres x y (PathP (_:p) i) (ParsingP id _ _ pres)    = xyFromPathPres x y (PathP p i) pres
 xyFromPathPres x y (PathP (_:p) i) (LocatorP l pres)         = xyFromPathPres x y (PathP p i) pres
-xyFromPathPres x y (PathP (_:p) i) (TagP t pres)         = xyFromPathPres x y (PathP p i) pres
+xyFromPathPres x y (PathP (_:p) i) (TagP t pres)             = xyFromPathPres x y (PathP p i) pres
 xyFromPathPres x y pth             pr                        = debug Err ("PresUtils.xyFromPathPres: can't handle "++show pth {-++" "++ show pr-}) (0,0, True)
 
 xyFromPathRow x y path@(PathP (s:p) i) press = xyFromPathPres (sum (map widthPres (take s press)) + x) 
@@ -408,7 +427,7 @@ c = ColP NoIDP
 widthPres pres = leftWidthPres pres + rightWidthPres pres
 heightPres pres = topHeightPres pres + bottomHeightPres pres
 
-leftWidthPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
+-- leftWidthPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
 leftWidthPres (EmptyP _)                = 0
 leftWidthPres (StringP _ str)           = 0
 leftWidthPres (ImageP _ _ _)            = 0
@@ -424,7 +443,7 @@ leftWidthPres (LocatorP _ pres)         = leftWidthPres pres
 leftWidthPres (TagP _ pres)         = leftWidthPres pres
 leftWidthPres pr                        = debug Err ("PresUtils.leftWidthPres: can't handle "++ show pr) 0
 
-rightWidthPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
+-- rightWidthPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
 rightWidthPres (EmptyP _)                = 0
 rightWidthPres (StringP _ str)           = length str
 rightWidthPres (ImageP _ _ _)            = 1
@@ -440,7 +459,7 @@ rightWidthPres (LocatorP _ pres)         = rightWidthPres pres
 rightWidthPres (TagP _ pres)         = rightWidthPres pres
 rightWidthPres pr                        = debug Err ("PresUtils.rightWidthPres: can't handle "++ show pr) 0
 
-topHeightPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
+-- topHeightPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
 topHeightPres (EmptyP _)                = 0
 topHeightPres (StringP _ str)           = 0
 topHeightPres (ImageP _ _ _)            = 0
@@ -458,7 +477,7 @@ topHeightPres pr                        = debug Err ("PresUtils.topHeightPres: c
 
 
 -- call bottomHeight depth? but then topHeight will be height and we need totalHeight for height
-bottomHeightPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
+-- bottomHeightPres :: (Show node, Show token) => Layout doc enr node clip token -> Int
 bottomHeightPres (EmptyP _)                = 0
 bottomHeightPres (StringP _ str)           = 1
 bottomHeightPres (ImageP _ _ _)            = 1
@@ -475,7 +494,7 @@ bottomHeightPres (TagP _ pres)         = bottomHeightPres pres
 bottomHeightPres pr                        = debug Err ("PresUtils.bottomHeightPres: can't handle "++ show pr) 0
 
 -- Bool is for disambiguating end of one string and start of the next. True means at start of string
-pathFromXYPres :: (Show node, Show token) => (Int, Int, Bool) -> Layout doc enr node clip token -> PathPres
+-- pathFromXYPres :: (Show node, Show token) => (Int, Int, Bool) -> Layout doc enr node clip token -> PathPres
 pathFromXYPres (x,0,b) (EmptyP _)    = PathP [] x 
 pathFromXYPres (x,0,b) (StringP _ txt)   = if x > length txt 
                                          then debug Err "PresUtils.pathFromXYPres: x>length" $ PathP [] (length txt) 

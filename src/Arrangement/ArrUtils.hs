@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 module Arrangement.ArrUtils where
 
 import Common.CommonTypes
@@ -491,20 +492,20 @@ point' x' y' _ _   arr                                 = debug Err ("ArrTypes.po
 -- precondition: x' y' falls inside the arrangement width
 pointRowList :: Show node => Int -> Int -> Int -> [Int] -> node -> [Arrangement node] -> Maybe ([Int], node)
 pointRowList i x' y' pth loc []         = debug Err "ArrTypes.pointRowList: empty Row list" $ Nothing
-pointRowList i x' y' pth loc (arr:arrs) = 
+pointRowList i x' y' pth loc (arr:arrs) =
   --debug Arr ("pointRowList on "++show i++":"++shallowShowArr arr) $
-  if x' >= xA arr + widthA arr 
+  if x' >= xA arr + widthA arr
   then pointRowList (i+1) x' y' pth loc arrs
-  else point' x' (clip 0 (heightA arr-1) y') 
+  else point' x' (clip 0 (heightA arr-1) y')
                  (pth++[i]) loc arr
 
 pointColList :: Show node => Int -> Int -> Int -> [Int] -> node -> [Arrangement node] -> Maybe ([Int], node)
 pointColList i x' y' pth loc [] = debug Err "ArrTypes.pointRowList: empty Row list" $ Nothing
 pointColList i x' y' pth loc (arr:arrs) =
   --debug Arr ("pointColList on "++show i++":"++shallowShowArr arr) $
-  if y' >= yA arr + heightA arr 
+  if y' >= yA arr + heightA arr
   then pointColList (i+1) x' y' pth loc arrs
-  else point' (clip 0 (widthA arr-1) x') y' 
+  else point' (clip 0 (widthA arr-1) x') y'
               (pth++[i]) loc arr
 
 -- Graphs let the pointing be handled by child arrangements. This is safe, because they must be
@@ -514,10 +515,10 @@ pointGraphList x' y' pth loc arrs =
   case catMaybes [ point' x' y' (pth++[i]) loc arr | (i,arr) <- zip [0..] arrs ] of
     []      -> Just (pth, loc) -- not focused on a child, so the focus is on the graph itself
     ((pth', loc'):_) -> Just (pth', loc')
-                                          
+
 
 -- returns a list of all nodes on the path together with their path, starting with the root
-getPathNodesPathsA = getPathNodesPathsA' []    
+getPathNodesPathsA = getPathNodesPathsA' []
 
 getPathNodesPathsA' :: Show node => Path -> Path -> Arrangement node -> [(Arrangement node, Path)]
 getPathNodesPathsA' rootPath []       arr                                = [(arr,rootPath)]

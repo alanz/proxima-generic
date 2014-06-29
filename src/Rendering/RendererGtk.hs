@@ -2,6 +2,7 @@
 -- CPP is enabled only for this module, since it slows the build process down quite a bit
 module Rendering.RendererGtk where
 
+import Control.Exception
 import Common.CommonTypes hiding (Rectangle)
 import qualified Common.CommonTypes as CommonTypes
 import Common.CommonUtils
@@ -91,7 +92,8 @@ mkPopupMenuXY settings prs scale arr handler renderingLvlVar buffer viewedAreaRe
     ; let ctxtItems = case point x y arr of
                         Nothing -> []
                         Just pthA -> popupMenuItemsPres (pathPFromPathA' arr prs pthA) prs
-    ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas upd)
+    -- ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas upd)
+    ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas (assert False undefined))
                       | (str, upd) <- ctxtItems]
     ; print (map fst menuItems)
 

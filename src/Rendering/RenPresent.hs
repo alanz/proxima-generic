@@ -16,7 +16,7 @@ presentIO settings state high low =  castRemainingEditOps $ \editHigh ->
  do { (editLow, state', high') <- Rendering.RenPresent.render settings state high low editHigh
     ; return ([editLow], state', high')
     }
-    
+
 -- debug & scaling is now done directly. This should be done with a setRendering
 {-
 render :: (HasPath node, Show node) => Settings ->
@@ -27,7 +27,7 @@ render :: (HasPath node, Show node) => Settings ->
 render settings state (ArrangementLevel arr focus prs) ren@(RenderingLevel scale _ _ _ _ debugging updRegions lmd) (SkipArr' 0) = 
    let arr'        = if debugging then debugArrangement arr else arr
        diffTree    = DiffLeafArr False Nothing
-       rendering   = Rendering.Renderer.render scale debugging diffTree arr' 
+       rendering   = Rendering.Renderer.render scale debugging diffTree arr'
        focusRendering = renderFocus scale debugging focus arr'
        updRegions' = computeUpdatedRegions updRegions scale focus diffTree arr arr'
        size        = (widthA arr', heightA arr')
@@ -38,7 +38,7 @@ render settings state (ArrangementLevel arrOld focusOld _) ren@(RenderingLevel s
    let arr'        = if debugging then debugArrangement arr else arr
        diffTree    = diffArr arr' arrOld
        updRegions' = computeUpdatedRegions updRegions scale focus diffTree arrOld arr'
-       rendering   = if rendererIncrementality settings 
+       rendering   = if rendererIncrementality settings
                      then Rendering.Renderer.render scale debugging diffTree arr'
                      else Rendering.Renderer.render scale debugging (DiffLeafArr False Nothing) arr'
        focusRendering = renderFocus scale debugging focus arr'
@@ -46,8 +46,8 @@ render settings state (ArrangementLevel arrOld focusOld _) ren@(RenderingLevel s
    in  {-debug Arr ("\n\n\nRender: old/new size "++ show (widthA arrOld, heightA arrOld)++ show (widthA arr', heightA arr')
                   ++ "\nDiffTree: "++ show diffTree
                   ++"Updated Regions" ++ show updRegions'
-                  ) 
-       
+                  )
+
        $ -}
    do { t <- getCurrentTime
       --; putStrLn "\n\n\nBefore diff"

@@ -266,7 +266,7 @@ genericHandler settings handler renderingLvlVar viewedAreaRef (buffer, window, v
     ; writeIORef viewedAreaRef viewedArea
 
 --    ; putStrLn $ "Viewed area that is about to be rendered: " ++ show viewedArea
-          
+
     ; (renderingLvl', editsRendering) <- handler (renderingLvl,evt)
     ; mapM_ process editsRendering
     }

@@ -37,7 +37,7 @@ data EditRendering_ wrapped doc enr node clip token =
     SkipRen Int
   | InitRen
   | CloseRen
-  | KeyCharRen Char 
+  | KeyCharRen Char
   | KeySpecialRen SpecialKey Modifiers
   | MouseDownRen Int Int Modifiers Int -- x y modifiers nrOfClicks
   | MouseDragRen Int Int Modifiers

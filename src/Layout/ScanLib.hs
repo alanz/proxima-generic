@@ -27,7 +27,7 @@ import Common.DebugLevels
 import Layout.LayLayerTypes
 import Layout.LayLayerUtils hiding (empty)
 import qualified Data.Map as Map hiding (mapMaybe, (!))
-import Maybe
+import Data.Maybe
 
 alexGetChar (_, [])   = Nothing
 alexGetChar (_, Char _ _ _ _ c : cs) = Just (c, (c,cs))

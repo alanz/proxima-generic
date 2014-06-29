@@ -6,7 +6,7 @@ import Common.CommonUtils
 import Proxima.Wrap
 
 import Control.Exception
-import Data.Maybe 
+import Data.Maybe
 import Data.IORef
 
 import Debug.Trace

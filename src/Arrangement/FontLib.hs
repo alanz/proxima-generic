@@ -4,10 +4,11 @@ module Arrangement.FontLib where
 import Common.CommonTypes
 import Common.CommonUtils
 #ifndef SERVER
-import Graphics.UI.Gtk hiding (FontMetrics)
+import qualified Graphics.UI.Gtk as Gtk
+import Graphics.UI.Gtk hiding (FontMetrics,Font,Settings)
 #endif
 
-import Settings
+-- ++AZ++ ? import Settings
 
 import qualified Data.Map as Map
 import Data.Map (Map)
@@ -79,7 +80,8 @@ mkFontMetrics settings fonts =
 #else
 -- Gtk font querying
 
-mkFontMetrics :: Settings -> [Font] -> IO FontMetrics
+-- mkFontMetrics :: Settings -> [Font] -> IO FontMetrics
+mkFontMetrics :: Settings -> [Gtk.Font] -> IO FontMetrics
 mkFontMetrics settings fonts =
   fmap Map.fromList $ mapM mkFontMetric fonts
 -- Because Underline and strikeOut have no influence on the metrics, all

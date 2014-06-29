@@ -1,7 +1,7 @@
 module Proxima.Proxima where
  
 import Data.IORef
-import System
+-- import System
 import Control.Exception
 
 import Proxima.Architecture

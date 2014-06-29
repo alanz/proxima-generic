@@ -20,7 +20,7 @@ SHELL = /bin/sh
 
 .PHONY: default all agc generator arranger scanner always
 
-PROXIMADIR = ../../proxima-generic
+PROXIMADIR = ../../proxima
 
 PROXIMABINDIR = $(PROXIMADIR)/bin
 PROXIMASRCDIR = $(PROXIMADIR)/src

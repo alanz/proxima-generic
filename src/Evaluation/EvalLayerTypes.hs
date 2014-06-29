@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 module Evaluation.EvalLayerTypes ( module Evaluation.EnrTypes
                       , module Evaluation.EvalLayerTypes    ) where
 

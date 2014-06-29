@@ -21,8 +21,9 @@ import System.IO.Unsafe
 import Data.IORef
 import System.IO
 
-import Graphics.UI.Gtk hiding (Scale, Solid, Size, Layout, fill, setSourceColor)
-import Graphics.Rendering.Cairo hiding (Path)
+import Graphics.UI.Gtk.Gdk.GC hiding (Solid,fill)
+import Graphics.UI.Gtk hiding (Scale, Solid, Size, Layout, fill, setSourceColor, Settings)
+import Graphics.Rendering.Cairo hiding (Path, Region) -- ++AZ++ added Region
 import Proxima.GUIGtk
 
 
@@ -80,7 +81,7 @@ so 1 pt = dpi/72 px
 
 
 mkPopupMenuXY :: (DocNode node, Show token) => Settings ->
-                 Layout doc node clip token -> Scale -> Arrangement node ->
+                 Layout doc enr node clip token -> Scale -> Arrangement node ->
                  ((RenderingLevel doc enr node clip token, EditRendering doc enr node clip token) ->
                  IO (RenderingLevel doc enr node clip token, [EditRendering' doc enr node clip token])) ->
                  IORef (RenderingLevel doc enr node clip token) ->
@@ -112,11 +113,11 @@ renderFocus scale arrDb focus arrangement (wi, dw, gc) viewedArea =
          ; renderArr undefined
                 (wi,dw,gc) arrDb scale origin viewedArea
                 (DiffLeaf False)
-                (OverlayA NoIDA (xA arrangement) (yA arrangement)  
-                                (widthA arrangement) (heightA arrangement) 
+                (OverlayA NoIDA (xA arrangement) (yA arrangement)
+                                (widthA arrangement) (heightA arrangement)
                                 0 0 transparent
                           HeadInFront
-                          focusArrList) 
+                          focusArrList)
          }
 
 {- make renderArrangement that does background setting (later do this only when needed)

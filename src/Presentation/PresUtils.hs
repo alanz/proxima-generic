@@ -838,11 +838,11 @@ mouseDownDocPres' upd (p:path) (FormatterP _ press)      = mouseDownDocPres' upd
 mouseDownDocPres' upd pth      pres                      = debug Err ("PresTypes.mouseDownDocPres: can't handle "++show pth++" "++show pres) Nothing
 
 
--- | Collect all popupMenuItems that are added by WithP nodes on path in pres 
+-- | Collect all popupMenuItems that are added by WithP nodes on path in pres
 popupMenuItemsPres :: (DocNode node, Show token) => [Int] -> PresentationBase doc enr node clip token level -> [PopupMenuItem doc enr node clip token]
 popupMenuItemsPres path pres = popupMenuItemsPres' ([],[]) path pres
 
-popupMenuItemsPres' :: (DocNode node, Show token) => 
+popupMenuItemsPres' :: (DocNode node, Show token) =>
                        ([PopupMenuItem doc enr node clip token],[PopupMenuItem doc enr node clip token]) -> [Int] ->
                        PresentationBase doc enr node clip token level -> [PopupMenuItem doc enr node clip token]
 popupMenuItemsPres' (local,inhtbl) []       tr             = inhtbl++local

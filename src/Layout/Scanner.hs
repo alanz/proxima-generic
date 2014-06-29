@@ -327,6 +327,14 @@ scanGroups sheet lex groupedScanChars =
 
 -- the scanner does not yet return the lexerState (or start code). Thus, style or structural tokens will break stateful scanning
 -- such as in strings
+ -- ++AZ++ addition of signature
+scanCharsOrStructurals :: (Show token, Show node)
+  => ((t0, Int)
+  -> [ScanChar doc enr node clip token]
+  -> ([ScannedToken doc enr node clip token], (t0, Int)))
+  -> (t0, Int)
+  -> [[ScanChar doc enr node clip token]]
+  -> ([ScannedToken doc enr node clip token], (t0, Int))
 scanCharsOrStructurals sheet state [] = ([],state)
 scanCharsOrStructurals sheet state@(lexerState,pos) (group@(scanChar:_):groups) = -- a group is never empty
   let (scannedTokens, state') = case scanChar of
@@ -338,6 +346,7 @@ scanCharsOrStructurals sheet state@(lexerState,pos) (group@(scanChar:_):groups) 
   in  (scannedTokens++scannedTokens', state'')
 scanCharsOrStructurals sheet pos (group:groups) = debug Err ("Layout.scanCharsOrStructurals: error"++show group) ([],pos)
 
+scanStructurals :: Int -> [ScanChar t0 t1 t2 t3 t4] -> ([ScannedToken t0 t1 t2 t3 t4],Int) -- ++AZ++ addition
 scanStructurals pos [] = ([], pos)
 scanStructurals pos (structural@(Structural idp _ _ loc tokens lay) : structuralScanChars) = 
   let scannedToken = ScannedToken (getFocusStartEnd [structural]) $ StructuralTk pos loc lay tokens idp

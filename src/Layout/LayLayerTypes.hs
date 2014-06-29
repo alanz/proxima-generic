@@ -14,16 +14,16 @@ data LayerStateLay doc enr node clip token = LayerStateLay { getClipboard :: (La
 
 type ScannerState = (LexerState, Int)
 
-type ScannerSheet doc enr node clip token = 
+type ScannerSheet doc enr node clip token =
       (ScannerState -> [ScanChar doc enr node clip token] -> ([ScannedToken doc enr node clip token], ScannerState))
-      
+
 defaultLexer :: Lexer
 defaultLexer = Lexer defaultLexerState NonStyled
 
 defaultLexerState = 0
 
 
-data ScanChar doc enr node clip token = 
+data ScanChar doc enr node clip token =
        Char         { idp :: IDP, startFocusMark :: FocusMark, endFocusMark :: FocusMark
                     , locator :: (Maybe node)
                     , char :: Char
@@ -31,7 +31,7 @@ data ScanChar doc enr node clip token =
      | Structural   { idp :: IDP, startFocusMark :: FocusMark, endFocusMark :: FocusMark
                     , locator :: (Maybe node), tokens :: [Token doc enr node clip token]
                     , prs :: (Presentation doc enr node clip token) -- original pres to show in case of parse/scan errors
-                    } 
+                    }
      | Style        { styleTag :: ScannedStyleTag
                     }
      deriving Show
@@ -41,19 +41,19 @@ isCharScanChar _            = False
 
 isStructuralScanChar (Structural _ _ _ _ _ _) = True
 isStructuralScanChar _            = False
- 
+
 isStyleScanChar (Style _ ) = True
 isStyleScanChar _          = False
 
 -- Scanned token is used as the return type for the alex scanner. Actual tokens are put
 -- in ScannedToken, and all whitespace is put in ScannedWhitespace. It is related to the preceding
--- token in the whitespace map. 
+-- token in the whitespace map.
 data ScannedToken doc enr node clip token =
        ScannedWhitespace FocusStartEnd Whitespace
      | ScannedToken      FocusStartEnd (Token doc enr node clip token) deriving Show
 
 showScannedTokens scannedTokens = "Scanned tokens:\n" ++ concat [ "  " ++ show st ++ "\n" | st <- scannedTokens ]
-   
+
 data FocusMark = FocusMark | NoFocusMark deriving (Eq, Show)
 
 

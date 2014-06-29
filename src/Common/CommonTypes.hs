@@ -1,4 +1,4 @@
-module Common.CommonTypes ( module Data.Char 
+module Common.CommonTypes ( module Data.Char
                    , module Data.List
                    , module Common.DebugLevels
                    , module Common.CommonTypes ) where
@@ -8,7 +8,7 @@ module Common.CommonTypes ( module Data.Char
 
 
 -}
-import Common.DebugLevels 
+import Common.DebugLevels
 
 import Data.Char
 import Data.List

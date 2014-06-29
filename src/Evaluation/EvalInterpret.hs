@@ -1,5 +1,6 @@
 module Evaluation.EvalInterpret where
 
+import Control.Exception
 import Common.CommonTypes
 import Common.CommonUtils
 import Evaluation.EvalLayerTypes
@@ -13,7 +14,7 @@ import UU.Parsing
 
 interpretIO :: (Doc doc, ReductionSheet doc enr clip) =>
                LayerStateEval doc clip -> EnrichedDocLevel enr doc -> DocumentLevel doc clip ->
-               [EditEnrichedDoc doc enr node clip token] -> 
+               [EditEnrichedDoc doc enr node clip token] ->
                IO ([EditDocument doc enr node clip token], LayerStateEval doc clip, EnrichedDocLevel enr doc)
 
 interpretIO state low high = castRemainingEditOps $ \editLow ->
@@ -24,13 +25,13 @@ interpretIO state low high = castRemainingEditOps $ \editLow ->
 
 reduceIO :: (Doc doc, ReductionSheet doc enr clip) =>
             LayerStateEval doc clip -> EnrichedDocLevel enr doc -> DocumentLevel doc clip ->
-            EditEnrichedDoc doc enr node clip token -> 
+            EditEnrichedDoc doc enr node clip token ->
             IO (EditDocument doc enr node clip token, LayerStateEval doc clip, EnrichedDocLevel enr doc)
-reduceIO state enrLvl (DocumentLevel _ _ clip) (OpenFileEnr fpth) = 
- do { mDoc' <- openFile fpth 
+reduceIO state enrLvl (DocumentLevel _ _ clip) (OpenFileEnr fpth) =
+ do { mDoc' <- openFile fpth
 	; case mDoc' of
 		Just doc' -> return (SetDoc (DocumentLevel doc' NoPathD clip), state, enrLvl)
-		Nothing  -> return (SkipDoc 0, state, enrLvl) 
+		Nothing  -> return (SkipDoc 0, state, enrLvl)
 	}
 
 reduceIO  state enrLvl (DocumentLevel doc _ _) (SaveFileEnr fpth) =
@@ -69,7 +70,7 @@ openFile fileName =
                        ; debugLnIO Err $ show $ take 2 errs
                        ; return $ Nothing
                        }
-    } `catch` \ioError -> do { putStr $ "File not found: "++fileName++", using default document instead.\n" ++ show ioError; return Nothing }
+    } `catch` \ioError -> do { putStr $ "File not found: "++fileName++", using default document instead.\n" ++ show (ioError :: IOException); return Nothing }
 
 parseEither pp inp =
       let res = parseString pp inp
@@ -82,6 +83,6 @@ saveFile filePath doc =
  do { debugLnIO Prs "Saving file"
     ; writeFile filePath $ showXML $ toXML doc
     ; return ()
-    } `catch` \ioError -> do { putStr $ "**** IO Error ****\n" ++ show ioError; return () }
+    } `catch` \ioError -> do { putStr $ "**** IO Error ****\n" ++ show (ioError :: IOException); return () }
   
 

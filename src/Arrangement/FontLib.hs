@@ -23,7 +23,8 @@ import Data.Maybe
 
 
 -- use different structure to make lookup more efficient? Or is this a waste of time
-type FontMetrics = Map Font (Int, Int, Array Int Float)
+-- type FontMetrics = Map Font (Int, Int, Array Int Float)
+type FontMetrics = Map Font (Int, Int, Array Int Int)
 
 type FontMetricsRef = IORef FontMetrics
 
@@ -81,7 +82,7 @@ mkFontMetrics settings fonts =
 -- Gtk font querying
 
 -- mkFontMetrics :: Settings -> [Font] -> IO FontMetrics
-mkFontMetrics :: Settings -> [Gtk.Font] -> IO FontMetrics
+mkFontMetrics :: Settings -> [Font] -> IO FontMetrics
 mkFontMetrics settings fonts =
   fmap Map.fromList $ mapM mkFontMetric fonts
 -- Because Underline and strikeOut have no influence on the metrics, all
@@ -144,7 +145,8 @@ fontDescriptionFromProximaFont (Font fFam fSiz fBld fUnderln fItlc fStrkt) =
 
 -- | Lookup the metrics for font. Because Underline and strikeOut have no influence on the metrics, all 
 -- fonts are stored in the Map with these attributes set to False.
-metricsLookup :: Font -> FontMetrics -> (Int, Int, Array Int Float)
+-- metricsLookup :: Font -> FontMetrics -> (Int, Int, Array Int Float)
+metricsLookup :: Font -> FontMetrics -> (Int, Int, Array Int Int)
 metricsLookup font fontMetrics =
   -- debug Err ("looking up: " ++ show (fSize font) ++ " " ++ (fFamily font)) $
   case Map.lookup (font {fUnderline = False, fStrikeOut = False}) fontMetrics  of
@@ -160,7 +162,8 @@ textWidth :: FontMetrics -> Font -> String -> Int
 textWidth fms f str = let (h,b,ws) = metricsLookup f fms
                           toWidth c = let i = ord c
                                       in  if i < 32 then 0 else ws ! (ord c - 32)
-                      in round $ sum (map toWidth str)
+                      -- in round $ sum (map toWidth str)
+                      in sum (map toWidth str)
 -- round (fromInt (length str) * charWidth fs)
 
 -- Is it accurate enough to add the widhts of the characters? The width of the string might
@@ -170,7 +173,8 @@ cumulativeCharWidths :: FontMetrics -> Font -> String -> [Int]
 cumulativeCharWidths fms f str = let (h,b,ws) = metricsLookup f fms
                                      toWidth c = let i = ord c
                                                  in  if i < 32 then 0 else ws ! (ord c - 32)
-                                 in  map round $ scanl (+) 0 (map toWidth str)
+                                 -- in  map round $ scanl (+) 0 (map toWidth str)
+                                 in  scanl (+) 0 (map toWidth str)
 
 charHeight :: FontMetrics -> Font -> Int
 charHeight fms f  = let (h,b,ws) = metricsLookup f fms

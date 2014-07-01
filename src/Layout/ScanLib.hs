@@ -28,10 +28,24 @@ import Layout.LayLayerTypes
 import Layout.LayLayerUtils hiding (empty)
 import qualified Data.Map as Map hiding (mapMaybe, (!))
 import Data.Maybe
+import Data.Word (Word8)
 
+{-
+-- Original alex 3.1.3 version
+alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
+alexGetByte (c,(b:bs),s) = Just (b,(c,bs,s))
+alexGetByte (c,[],[])    = Nothing
+alexGetByte (_,[],(c:s)) = case utf8Encode c of
+                             (b:bs) -> Just (b, (c, bs, s))
+                             [] -> Nothing
+-}
+
+
+{-
 alexGetChar (_, [])   = Nothing
 alexGetChar (_, Char _ _ _ _ c : cs) = Just (c, (c,cs))
 alexGetChar (_, Structural _ _ _ _ _ _ : cs) = Just ('\255', ('\255', cs))
+-}
 
 alexInputPrevChar (c,_) = c
 

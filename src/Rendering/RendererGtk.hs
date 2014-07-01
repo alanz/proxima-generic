@@ -124,8 +124,10 @@ renderFocus scale arrDb focus arrangement (wi, dw, gc) viewedArea =
 
 {- make renderArrangement that does background setting (later do this only when needed)
 -}
-renderArr :: (DocNode node, DrawableClass drawWindow) => Region -> (Window, drawWindow, GC) -> Bool -> Scale -> (Int,Int) ->
-                                         (Point, Size) -> DiffTree -> Arrangement node -> Render ()    
+renderArr :: (DocNode node, DrawableClass drawWindow)
+   => Region -> (Window, drawWindow, GC) -> Bool -> Scale -> (Int,Int)
+   -- -> (Point, Size) -> DiffTree -> Arrangement node -> Render ()
+   -> (Point, Size) -> DiffTree -> Arrangement node -> Render ()
 renderArr oldClipRegion (wi,dw,gc) arrDb scale (lux, luy) viewedArea diffTree arrangement =
  do { -- debugLnIO Err (shallowShowArr arrangement ++":"++ show (isCleanDT diffTree));
      --if True then return () else    -- uncomment this line to skip rendering

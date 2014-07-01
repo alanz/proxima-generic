@@ -29,7 +29,7 @@ render scale arrDb diffTree arrangement viewedArea =
     -- debugLnIO Err ("The updated rectangle is: "++show (updatedRectArr diffTree arrangement))
     --; clipRegion <- regionRectangle $ Rectangle (xA arrangement) (yA arrangement) (widthA arrangement) (heightA arrangement)
     -- cannot use these IO regions anymore
-    
+
     ; --debug Ren ("DiffTree is " ++ show diffTree) $
      -- debug Ren ("Arrangement is "++showTreeArr arrangement) $
       renderArr arrDb scale origin viewedArea Nothing (Just [0]) diffTree arrangement
@@ -39,7 +39,7 @@ render scale arrDb diffTree arrangement viewedArea =
 -- old comment: debugged rendering also displays overlay for focus adding, but this has not been processed by debugArrangement
 -- this makes it tricky to move the debuggedArrangement, since the Gest.Int. will not know about it
 -- however, we don't want to debug the focus
-    
+
 renderFocus scale arrDb focus arrangement viewedArea =
  do { -- clipRegion <- regionRectangle $ Rectangle (xA arrangement) (yA arrangement) (widthA arrangement) (heightA arrangement)
 

@@ -179,6 +179,14 @@ data DiffTreeArr = DiffLeafArr !Bool (Maybe MoveRen)
 
 -- basically, self dirty means that the subtree will be entirely redrawn
 
+diffTree2Arr :: DiffTree -> DiffTreeArr
+diffTree2Arr (DiffLeaf b)         = (DiffLeafArr b Nothing)
+diffTree2Arr (DiffNode b b' subs) = (DiffNodeArr b b' Nothing Nothing (map diffTree2Arr subs))
+
+diffTreeArr2Tree :: DiffTreeArr -> DiffTree
+diffTreeArr2Tree (DiffLeafArr b _) = (DiffLeaf b)
+diffTreeArr2Tree (DiffNodeArr b b' _ _ subs) =  (DiffNode b b' (map diffTreeArr2Tree subs))
+
 type MoveRen = ((XCoord, YCoord), (Width, Height))
 -- move is relative, so it's more a move/resize
 

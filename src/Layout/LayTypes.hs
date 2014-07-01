@@ -1,3 +1,4 @@
+{-# LANGUAGE EmptyDataDecls #-}
 module Layout.LayTypes (module Presentation.PresTypes, module Layout.LayTypes) where
 
 import Common.CommonTypes
@@ -12,12 +13,12 @@ import Evaluation.DocTypes -- for UpdateDocLay
 -- cleaner, as Presentation specific definitions (eg. PresentationLevel) are visible at
 -- LayoutLevel. This is not really a problem, however.
 
-data LayoutLevel doc enr node clip token = 
+data LayoutLevel doc enr node clip token =
   LayoutLevel (Layout doc enr node clip token) FocusPres DiffTree deriving Show
                                                     -- DiffTree is experimental for incrementality
 data EditLayout'_ wrapped doc enr node clip token =
     SetLay' (LayoutLevel doc enr node clip token)
-  | SkipLay' Int 
+  | SkipLay' Int
   | WrapLay' wrapped deriving Show
 
 data EditLayout_ wrapped doc enr node clip token =
@@ -50,7 +51,7 @@ data EditLayout_ wrapped doc enr node clip token =
   | ParseLay
   | FindLay (Maybe String)
   | Test2Lay
-  
+
   | WrapLay wrapped deriving Show
 
 
@@ -66,4 +67,3 @@ type LayoutList doc enr node clip token = [Layout doc enr node clip token]
 
 data StyleEdit = SetBold | ClearBold | SetItalic | ClearItalic | DecreaseFontSize | IncreaseFontSize |
                  {- SetFontSize Int | -} SetColor Color deriving (Show, Read, Eq, Ord)
-                                                                 

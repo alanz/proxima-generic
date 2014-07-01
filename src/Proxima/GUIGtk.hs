@@ -106,7 +106,7 @@ withCatch io = io `Control.Exception.catch` handler
            ; putStrLn "\n<Press return to exit>"
            ; getLine
            ; mainQuit
-           ; return undefined
+           ; return (assert False undefined)
            } -- This way, the dos window on Windows does not exit until the user can see the error.
 
 

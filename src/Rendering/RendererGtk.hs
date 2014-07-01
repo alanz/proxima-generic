@@ -105,14 +105,14 @@ render scale arrDb diffTree arrangement (wi,dw,gc) viewedArea =
  do { setLineCap LineCapRound
     ; setLineJoin LineJoinRound
 --    ; seq (length (show arrangement)) $ return ()
-    ; renderArr undefined (wi,dw,gc) arrDb scale origin viewedArea diffTree arrangement
+    ; renderArr (assert False undefined) (wi,dw,gc) arrDb scale origin viewedArea diffTree arrangement
     }
 
 renderFocus scale arrDb focus arrangement (wi, dw, gc) viewedArea =
   let focusArrList = arrangeFocus focus arrangement
   in  do { setLineCap LineCapRound
          ; setLineJoin LineJoinRound
-         ; renderArr undefined
+         ; renderArr (assert False undefined)
                 (wi,dw,gc) arrDb scale origin viewedArea
                 (DiffLeaf False)
                 (OverlayA NoIDA (xA arrangement) (yA arrangement)

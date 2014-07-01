@@ -144,7 +144,7 @@ pStrAlt ndf p = unfoldStructure
 -- maybe we do want the old value for that one? Right now the parse error presentation is presented
 -- so a tree can contain source text (which fails on parsing)
 
-f <@> p = undefined
+f <@> p = assert False undefined
 
 -- is this right?
 pInc :: (DocNode node, Ord token, Show token) =>
@@ -157,10 +157,10 @@ pInc p = pWrap f f' p
            Just (v,nrOfToks) ->  (state, val (uncurry brr) (NoMoreSteps v), (\_ -> k (drop nrOfToks state)))
 
 getValIfUnchanged :: token -> Maybe (a, Int)
-getValIfUnchanged = undefined
+getValIfUnchanged = assert False undefined
 
 pSkip :: (DocNode node, Ord token, Show token) => Int -> ListParser doc enr node clip token ()
-pSkip n = undefined
+pSkip n = assert False undefined
 {-
 pSkip :: (DocNode node, Ord token, Show token) => Int -> ListParser doc enr node clip token ()
 pSkip n = pMap f f' (pSucceed ())

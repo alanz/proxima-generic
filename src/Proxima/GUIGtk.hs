@@ -74,25 +74,25 @@ initialize (settings,handler,renderingLvlVar,viewedAreaRef,initialWindowSize) =
         , ("_Save", withCatch $ fileMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas "save")
         , ("_Quit", mainQuit)
         ]
-    
+
     ; fileItem <- menuItemNewWithMnemonic "_File"
-    ; menuItemSetSubmenu fileItem fileMenu 
-   
+    ; menuItemSetSubmenu fileItem fileMenu
+
     ; menuBar <- menuBarNew
     ; menuShellAppend menuBar fileItem
-  
+
     ; vBox <- vBoxNew False 0
     ; set vBox [boxHomogeneous := False]
-    
+
     ; boxPackStart vBox menuBar PackNatural 0
     ; boxPackStart vBox sw PackGrow 0
 
     ; containerAdd window vBox
-    
+
     ; widgetShowAll window
     ; return (buffer, window, vp, canvas)
     }
-    
+
 startEventLoop _ = mainGUI
 
 -- GTK somehow catches exceptions that occur in event handlers, and terminates the program. To
@@ -195,7 +195,7 @@ popupMenuHandler ::
 popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas editDoc =
  -- do { let editRendering = castDoc' $ UpdateDoc editDoc
  do { let editRendering = castDoc' $ UpdateDoc' editDoc
-    ; genericHandler settings handler renderingLvlVar viewedAreaRef (buffer, window, vp, canvas) editRendering                 
+    ; genericHandler settings handler renderingLvlVar viewedAreaRef (buffer, window, vp, canvas) editRendering
     }
 
 fileMenuHandler :: Settings ->

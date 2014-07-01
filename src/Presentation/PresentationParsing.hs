@@ -34,8 +34,8 @@ parsePres _ _    = error "parsePres: scanned presentation has wrong format"
 
 pMaybe parser = Just <$> parser `opt` Nothing
 
--- pStructuralTk :: IsParser p (Token doc enr node clip token)
---    => (t -> [a] -> node) -> p (Token doc enr node clip token)
+-- pStructuralTk :: (IsParser p (Token doc enr node clip token), Editable a doc enr node clip token)
+--    => (a -> [b] -> node) -> p (Token doc enr node clip token)
 pStructuralTk nd = pSym (StructuralTk 0 (Just $ nd (error "This should not have happened") []) (EmptyP NoIDP) [] NoIDP)
 
 
@@ -44,8 +44,8 @@ applyDummyParameters nd = nd (error "This should not have happened") []
 
 -- continues parsing on the children inside the structural token. the structural token is put in front
 -- of the children, so reuse can be used on it just like in the normal parsers
---pStr ::  (Editable a doc enr node clip token, DocNode node, Ord token, Show token) =>
---         ListParser doc enr node clip token a -> ListParser doc enr node clip token a
+pStr ::  (Editable a doc enr node clip token, DocNode node, Ord token, Show token) =>
+        ListParser doc enr node clip token a -> ListParser doc enr node clip token a
 pStr = pStr' (EmptyP NoIDP)
 
 pStrVerbose str = pStr' (StringP NoIDP str)
@@ -58,17 +58,48 @@ pStr' prs p = unfoldStructure
        unfoldStructure _ = error "NewParser.pStr structural parser returned non structural token.."
 
 -- The scoped type variable is necessary to get hole and holeNodeConstr of the same type a.
-addHoleParser :: -- forall a doc enr node clip token .
+addHoleParser :: forall a doc enr node clip token .
      (DocNode node, Ord token, Show token,
       Editable a doc enr node clip token)
-   => ListParser doc enr node clip token a
-   -> ListParser doc enr node clip token a
+   -- => ListParser doc enr node clip token a
+   -- -> ListParser doc enr node clip token a
+   => Parser (Token doc enr node clip token) a
+   -> Parser (Token doc enr node clip token) a
 addHoleParser p =
   -- p <|> hole <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)
-  -- p <|> hole <$ pStructuralTk holeNodeConstr
-  -- p <|> (((hole :: a) <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)) :: ListParser doc enr node clip token a)
   assert False undefined
 
+p3 ::
+ (IsParser p (Token doc enr node clip token),
+  Editable a doc enr node clip token)
+  => p (Token doc enr node clip token)
+p3 = pStructuralTk (holeNodeConstr :: a -> Path -> node)
+  where
+    h :: (Editable a doc enr node clip token) => a
+    h = hole
+
+    hnc ::  (Editable a doc enr node clip token) => a -> [Int] -> node
+    hnc = holeNodeConstr
+
+{-
+p2 :: forall a doc enr node clip token .
+     (DocNode node, Ord token, Show token,
+      Editable a doc enr node clip token)
+   => Parser (Token doc enr node clip token) a
+-}
+{-
+p2 ::
+ (IsParser p (Token doc enr node clip token),
+  Editable a doc enr node clip token)
+  => p (Token doc enr node clip token)
+p2 = hole <$ pStructuralTk hnc
+  where
+    h :: (Editable a doc enr node clip token) => a
+    h = hole
+
+    hnc ::  (Editable a doc enr node clip token) => a -> [Int] -> node
+    hnc = holeNodeConstr
+-}
 {-
 pStructuralTk ::
   IsParser p (Token doc enr node clip token) =>
@@ -79,11 +110,7 @@ type ListParser doc enr node clip token a =
   Parser (Token doc enr node clip token) a
   	-- Defined at Presentation/PresTypes.hs:85:6
 
-class Editable a doc enr node clip token | a -> doc
-                                                enr
-                                                node
-                                                clip
-                                                token where
+class Editable a doc enr node clip token | a -> doc enr node clip token where
   ...
   hole :: a
   holeNodeConstr :: a -> Path -> node
@@ -93,17 +120,32 @@ class Editable a doc enr node clip token | a -> doc
 
 class IsParser p s | p -> s where
   ...
-  (<|>) :: p a -> p a -> p a
+  -- | Alternative combinator. Succeeds if either of the two arguments
+  -- succeed, and returns the result of the best success parse.
+  (<|>) :: p a -> p a -> p a -- defined as : anaOr
   ...
   	-- Defined in `UU.Parsing.Interface'
 infixl 3 <|>
 
 class IsParser p s | p -> s where
   ...
-  (<$) :: b -> p a -> p b -- defined as : f <$  q = pSucceed f <*  q
+  (<$) :: a -> p b -> p a -- defined as : f <$  q = pSucceed f <*  q
   ...
   	-- Defined in `UU.Parsing.Interface'
 infixl 4 <$
+
+anaOr :: (Ord s, Symbol s, OutputState result, InputState state s p)
+   => AnaParser state result s p a
+   -> AnaParser state result s p a
+   -> AnaParser state result s p a
+anaOr ld@(AnaParser _ ll zl ol)  rd@(AnaParser _ lr zr or)
+ = mkParser newlength newZeroDescr newOneDescr
+   where (newlength, maybeswap) = ll `nat_min` lr
+         newZeroDescr  = case zl of {Nothing -> zr
+                                    ;_       -> case zr of {Nothing -> zl
+                                                           ;_       -> usererror ("Two empty alternatives")
+                                    }                      }
+         newOneDescr   =  maybeswap orOneOneDescr ol or False
 
 -}
 

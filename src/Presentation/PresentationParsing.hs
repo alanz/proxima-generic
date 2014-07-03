@@ -57,18 +57,22 @@ pStr' prs p = unfoldStructure
          in  if null errs then res else debug Err ("ERROR: Parse error in structural parser:"++(show errs)) parseErr (StructuralParseErr pr)
        unfoldStructure _ = error "NewParser.pStr structural parser returned non structural token.."
 
+addHoleParser p = p <|> addHoleParser' p
+
 -- The scoped type variable is necessary to get hole and holeNodeConstr of the same type a.
-addHoleParser :: forall a doc enr node clip token .
+addHoleParser' :: forall a doc enr node clip token .
      (DocNode node, Ord token, Show token,
       Editable a doc enr node clip token)
    -- => ListParser doc enr node clip token a
    -- -> ListParser doc enr node clip token a
    => Parser (Token doc enr node clip token) a
    -> Parser (Token doc enr node clip token) a
-addHoleParser p =
+addHoleParser' p =
   -- p <|> hole <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)
-  assert False undefined
+  -- assert False undefined
+  hole <$ pStructuralTk (holeNodeConstr :: a -> Path -> node)
 
+{-
 p3 ::
  (IsParser p (Token doc enr node clip token),
   Editable a doc enr node clip token)
@@ -80,7 +84,7 @@ p3 = pStructuralTk (holeNodeConstr :: a -> Path -> node)
 
     hnc ::  (Editable a doc enr node clip token) => a -> [Int] -> node
     hnc = holeNodeConstr
-
+-}
 {-
 p2 :: forall a doc enr node clip token .
      (DocNode node, Ord token, Show token,
@@ -113,7 +117,7 @@ type ListParser doc enr node clip token a =
 class Editable a doc enr node clip token | a -> doc enr node clip token where
   ...
   hole :: a
-  holeNodeConstr :: a -> Path -> node
+  holeNodeConstr :: a -> Path -> nodew
   ...
   	-- Defined at Evaluation/DocumentEdit.hs:27:3
 

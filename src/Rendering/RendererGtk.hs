@@ -93,8 +93,8 @@ mkPopupMenuXY settings prs scale arr handler renderingLvlVar buffer viewedAreaRe
                         Nothing -> []
                         Just pthA -> popupMenuItemsPres (pathPFromPathA' arr prs pthA) prs
     ; debugLnIO Err ("mkPopupMenuXY:ctxtItems:" {- ++ show ctxtItems -}); -- ++AZ++
-    -- ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas upd)
-    ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas (assert False undefined))
+    ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas upd)
+    -- ; let menuItems = [ (str, popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas (assert False undefined))
                       | (str, upd) <- ctxtItems]
     ; print (map fst menuItems)
 

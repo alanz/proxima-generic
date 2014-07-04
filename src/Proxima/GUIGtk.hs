@@ -180,6 +180,8 @@ onKeyboard settings handler renderingLvlVar buffer viewedAreaRef window vp canva
              }
     }
 
+
+
 popupMenuHandler ::
   Settings
   -> ((RenderingLevel doc enr node clip token, EditRendering doc enr node clip token)
@@ -190,11 +192,11 @@ popupMenuHandler ::
   -> Window
   -> Viewport
   -> DrawingArea
-  -> ((DocumentLevel doc clip) -> (DocumentLevel doc clip))
+  -- -> ((DocumentLevel doc clip) -> (DocumentLevel doc clip))
+  -> Wrapped doc enr node clip token -- ++AZ++ as in web server version
   -> IO ()
 popupMenuHandler settings handler renderingLvlVar buffer viewedAreaRef window vp canvas editDoc =
- -- do { let editRendering = castDoc' $ UpdateDoc editDoc
- do { let editRendering = castDoc' $ UpdateDoc' editDoc
+ do { let editRendering = WrapRen editDoc
     ; genericHandler settings handler renderingLvlVar viewedAreaRef (buffer, window, vp, canvas) editRendering
     }
 
@@ -277,92 +279,92 @@ genericHandler settings handler renderingLvlVar viewedAreaRef (buffer, window, v
             ; widgetSetSizeRequest canvas newW newH
   --          ; putStrLn $ "Drawing " ++ show (w,h) ++ show (newW,newH)
             ; dw <- widgetGetDrawWindow canvas
-            
+
             ; maybePm <- readIORef buffer
             ; when ((isNothing maybePm || (newW,newH)/=(w,h)) -- if there was no pixmap, or if the size changed
                     && (newW /= 0 && newH /= 0)) $ -- gtk crashes if we create an empty pixmap
               do { pm <- pixmapNew (Just dw) newW newH Nothing -- we create a new one
                  ; writeIORef buffer (Just pm)
                  }
-            
+
             ; maybePm <- readIORef buffer
             ; case maybePm of
                 Just pm -> drawRendering settings renderingLvlVar window vp pm
-                Nothing -> return () -- will not occur 
-    
+                Nothing -> return () -- will not occur
+
 
 
             ; drawWindowInvalidateRect dw (Rectangle 0 0 (max w newW) (max h newH))  False -- invalidate entire rendering
             -- we could use the updated areas, but drawing the entire bitmap is probably
             -- not much more expensive than computing which subpart to draw.
             }
-    
-  
-drawRendering :: DrawableClass d => 
+
+
+drawRendering :: DrawableClass d =>
                  Settings ->
                  IORef (RenderingLevel doc enr node clip token) -> Window -> Viewport -> d -> IO ()
-drawRendering settings renderingLvlVar wi vp pm = 
+drawRendering settings renderingLvlVar wi vp pm =
  do { RenderingLevel scale mkPopupMenu rendering _ (w,h) debug updRegions _ <- readIORef renderingLvlVar
 --    ; putStrLn "Drawing rendering"
     ; let drawFilledRectangle drw grc ((x,y),(w,h)) = drawRectangle drw grc True x y w h
     ; gc <- gcNew pm
-        
+
     ; gcSetValues gc $ newGCValues { foreground = gtkColor CommonTypes.white }
-     
+
     -- ; putStrLn $ "The updated regions are " ++ show updRegions
       -- clear background for updated regions
     ; mapM_ (\((x,y),(w,h)) -> drawRectangle pm gc True x y w h) updRegions
 
-    ; viewedArea <- getViewedArea settings vp 
+    ; viewedArea <- getViewedArea settings vp
     -- ; putStrLn $ "The viewed area is" ++ show viewedArea
     ; let theRendering = rendering (wi, pm, gc) viewedArea -- rendering only viewedArea is not extremely useful,
                                         -- since arranger already only arranges elements in view
                                         -- currently, it only prevents rendering edges out of view
- 
-     
-    ; renderWithDrawable pm theRendering  
+
+
+    ; renderWithDrawable pm theRendering
 {-    ; let (width, height) = (200,200)
     ; renderWithDrawable pm $ do
                 setSourceRGB 1 0 0
                 setLineWidth 20
                 setLineCap LineCapRound
                 setLineJoin LineJoinRound
-            
+
                 moveTo 30 30
                 lineTo (width-30) (height-30)
                 lineTo (width-30) 30
                 lineTo 30 (height-30)
                 stroke
-            
-                
+
+
                 moveTo 500 500
                 selectFontFace"Lucida Console" FontSlantNormal FontWeightNormal
                 setFontSize 20
                 showText "hallo"
                 --stroke
-                
+
                 setSourceRGB 1 1 0
                 setLineWidth 4
-              
+
                 save
                 translate (width / 2) (height / 2)
                 scale (width / 2) (height / 2)
                 arc 0 0 1 (135 * pi/180) (225 * pi/180)
                 restore
                 stroke
-                
+
                 setSourceRGB 0 0 0
                 moveTo 30 (realToFrac height / 4)
                 rotate (pi/4)
- -}               
-            
-   
+ -}
+
+
     }
-          
+
 paintFocus :: Settings -> IORef (RenderingLevel doc enr node clip token) -> Window -> DrawWindow -> GC -> Viewport -> IO ()
-paintFocus settings renderingLvlVar wi dw gc vp = 
+paintFocus settings renderingLvlVar wi dw gc vp =
  do { RenderingLevel scale _ rendering focusRendering (w,h) debug updRegions _ <- readIORef renderingLvlVar
-    ; viewedArea <- getViewedArea settings vp 
+    ; viewedArea <- getViewedArea settings vp
     ; let theRendering' = focusRendering (wi, dw {-was pm-},gc) viewedArea
     ; renderWithDrawable dw theRendering'
     }

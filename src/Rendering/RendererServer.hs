@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-} 
+{-# LANGUAGE CPP #-}
 -- CPP is enabled only for this module, since it slows the build process down quite a bit
 module Rendering.RendererServer where
 
@@ -12,7 +12,8 @@ import Proxima.Wrap
 
 import Arrangement.ArrLayerUtils (point, popupMenuItemsPres, pathPFromPathA')  -- for context menu hack
 --import Presentation.PresTypes hiding (font) -- For Locations
-import Layout.LayTypes hiding (Point)
+-- ++AZ++ import Layout.LayTypes hiding (Point)
+import Layout.LayTypes 
 
 import Evaluation.DocTypes (DocumentLevel)
 import Arrangement.FontLib
@@ -22,7 +23,15 @@ import Data.IORef
 import System.IO
 import Control.Monad.Writer hiding (when)
 
-
+render ::
+  -- forall node.
+  (Show node) =>
+  Scale
+  -> Bool
+  -> Common.CommonTypes.DiffTreeArr
+  -> Arrangement node
+  -> (Point, Size)
+  -> Writer String ()
 render scale arrDb diffTree arrangement viewedArea =
  do { -- seq (walk arrangement) $ return ()        -- maybe this is not necessary anymore, now the datastructure is strict
     --; putStrLn $ "Rendering on viewedArea " ++ show viewedArea
